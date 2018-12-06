@@ -38,10 +38,10 @@ import com.google.inject.name.Named;
 import javax.inject.Inject;
 
 @FxmlView
-public class MediationRequestsView extends TraderDisputeView {
+public class MediationRequestView extends TraderDisputeView {
 
     @Inject
-    public MediationRequestsView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager,
+    public MediationRequestView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager,
                                  BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
                                  PrivateNotificationManager privateNotificationManager,
                                  ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow,
