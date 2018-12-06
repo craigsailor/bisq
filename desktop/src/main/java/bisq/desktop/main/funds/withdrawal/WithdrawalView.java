@@ -82,6 +82,8 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
+import javafx.geometry.Pos;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -215,6 +217,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         withdrawToTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode())).second;
+        withdrawToTextField.setMaxWidth(380);
 
         final Button withdrawButton = addButton(gridPane, ++rowIndex, Res.get("funds.withdrawal.withdrawButton"), 15);
 
@@ -533,6 +536,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+
         addressColumn.setCellFactory(
                 new Callback<>() {
 
@@ -551,6 +555,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     hyperlinkWithIcon = new HyperlinkWithIcon(address, AwesomeIcon.EXTERNAL_LINK);
                                     hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
+                                    setAlignment(Pos.CENTER);
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
                                     setGraphic(null);
@@ -564,6 +569,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void setBalanceColumnCellFactory() {
+        balanceColumn.getStyleClass().add("last-column");
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         balanceColumn.setCellFactory(
                 new Callback<>() {
@@ -583,6 +589,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void setSelectColumnCellFactory() {
+        selectColumn.getStyleClass().add("first-column");
         selectColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         selectColumn.setCellFactory(
