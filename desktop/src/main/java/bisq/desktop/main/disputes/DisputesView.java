@@ -29,6 +29,9 @@ import bisq.desktop.main.disputes.arbitrator.ArbitratorDisputeView;
 import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.desktop.main.disputes.mediator.MediationRequestView;
+import bisq.desktop.main.disputes.mediator.MediatorDisputeView;
+
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.DisputeManager;
@@ -58,6 +61,8 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     Tab tradersDisputesTab;
 
     private Tab arbitratorsDisputesTab;
+    private Tab mediationRequestTab;
+    private Tab mediatorDisputesTab;
 
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
@@ -95,6 +100,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                 navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
             else if (newValue == arbitratorsDisputesTab)
                 navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
+            else if (newValue == mediationRequestsTab)
+                navigation.navigateTo(MainView.class, DisputesView.class, MediationRequestsView.class);
+            else if (newValue == mediatorDisputesTab)
+                navigation.navigateTo(MainView.class, DisputesView.class, MediatorDisputesView.class);
         };
 
         arbitratorMapChangeListener = change -> updateArbitratorsDisputesTabDisableState();
@@ -113,6 +122,21 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
             root.getTabs().add(arbitratorsDisputesTab);
             tradersDisputesTab.setText(Res.get("support.tab.TradersSupportTickets").toUpperCase());
         }
+
+		// New Mediation Request Tab
+        if (mediationRequestsTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {
+            mediationRequestsTab = new Tab(Res.get("support.tab.MediationRequestTickets").toUpperCase());
+            mediationRequestsTab.setClosable(false);
+            root.getTabs().add(mediationRequestsTab);
+        }
+
+		// New Mediation Disputes Tab
+        if (mediatorDisputesTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {
+            mediatorDisputesTab = new Tab(Res.get("support.tab.MediatorsSupportTickets").toUpperCase());
+            mediatorDisputesTab.setClosable(false);
+            root.getTabs().add(mediatorsDisputesTab);
+            tradersDisputesTab.setText(Res.get("support.tab.TradersSupportTickets").toUpperCase());
+        }
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -127,6 +151,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         if (arbitratorsDisputesTab != null && root.getSelectionModel().getSelectedItem() == arbitratorsDisputesTab)
             navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
+        if (mediationRequestsTab != null && root.getSelectionModel().getSelectedItem() == mediationRequestsTab)
+            navigation.navigateTo(MainView.class, DisputesView.class, MediationRequestsView.class);
+        if (mediatorDisputesTab != null && root.getSelectionModel().getSelectedItem() == mediatorDisputesTab)
+            navigation.navigateTo(MainView.class, DisputesView.class, MediatorDisputeView.class);
         else
             navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
 
@@ -156,6 +184,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         if (arbitratorsDisputesTab != null && view instanceof ArbitratorDisputeView)
             currentTab = arbitratorsDisputesTab;
+        if (mediationRequestsTab != null && view instanceof MediationRequestsView)
+            currentTab = mediationRequestsTab;
+        if (mediatorDisputesTab != null && view instanceof MediatorDisputeView)
+            currentTab = mediatorDisputesTab;
         else
             currentTab = tradersDisputesTab;
 
