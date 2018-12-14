@@ -174,22 +174,6 @@ class MediatorRegistrationViewModel extends ActivatableViewModel {
                     null,
                     null
             );
-// From Arbitrator code
-/*
-            Mediator mediator = new Mediator(
-                    p2PService.getAddress(),
-                    mediatorDepositAddressEntry.getPubKey(),
-                    mediatorDepositAddressEntry.getAddressString(),
-                    keyRing.getPubKeyRing(),
-                    new ArrayList<>(languageCodes),
-                    new Date().getTime(),
-                    registrationKey.getPubKey(),
-                    registrationSignature,
-                    emailAddress,
-                    null,
-                    null
-            );
-*/
 
             mediatorManager.addMediator(mediator,
                     () -> {
