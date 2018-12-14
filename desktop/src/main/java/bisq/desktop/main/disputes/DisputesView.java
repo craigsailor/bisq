@@ -150,18 +150,14 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
-        if (arbitratorsDisputesTab != null && root.getSelectionModel().getSelectedItem() == arbitratorsDisputesTab) {
+        if (arbitratorsDisputesTab != null && root.getSelectionModel().getSelectedItem() == arbitratorsDisputesTab)
             navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
-		}
-        else if (mediationRequestTab != null && root.getSelectionModel().getSelectedItem() == mediationRequestTab) {
+        else if (mediationRequestTab != null && root.getSelectionModel().getSelectedItem() == mediationRequestTab)
             navigation.navigateTo(MainView.class, DisputesView.class, MediationRequestView.class);
-		}
-        else if (mediatorDisputeTab != null && root.getSelectionModel().getSelectedItem() == mediatorDisputeTab) {
+        else if (mediatorDisputeTab != null && root.getSelectionModel().getSelectedItem() == mediatorDisputeTab)
             navigation.navigateTo(MainView.class, DisputesView.class, MediatorDisputeView.class);
-		}
-        else if (tradersDisputesTab != null && root.getSelectionModel().getSelectedItem() == tradersDisputesTab) {
+        else if (tradersDisputesTab != null && root.getSelectionModel().getSelectedItem() == tradersDisputesTab)
             navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
-		}
 
         //noinspection UnusedAssignment
         String key = "supportInfo";

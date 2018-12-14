@@ -19,7 +19,7 @@ package bisq.core.user;
 
 import bisq.core.alert.Alert;
 import bisq.core.arbitration.ArbitratorTest;
-import bisq.core.arbitration.MediatorTest;
+import bisq.core.disputes.MediatorTest;
 import bisq.core.filter.Filter;
 import bisq.core.proto.CoreProtoResolver;
 

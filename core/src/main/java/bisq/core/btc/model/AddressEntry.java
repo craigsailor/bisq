@@ -53,6 +53,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class AddressEntry implements PersistablePayload {
     public enum Context {
         ARBITRATOR,
+        MEDIATOR,
         AVAILABLE,
         OFFER_FUNDING,
         RESERVED_FOR_TRADE,

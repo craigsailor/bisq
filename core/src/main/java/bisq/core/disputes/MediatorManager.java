@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.arbitration;
+package bisq.core.disputes;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.filter.FilterManager;
@@ -69,14 +69,14 @@ import javax.annotation.Nullable;
 
 import static org.bitcoinj.core.Utils.HEX;
 
-public class ArbitratorManager {
-    private static final Logger log = LoggerFactory.getLogger(ArbitratorManager.class);
+public class MediatorManager {
+    private static final Logger log = LoggerFactory.getLogger(MediatorManager.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final long REPUBLISH_MILLIS = Arbitrator.TTL / 2;
+    private static final long REPUBLISH_MILLIS = Mediator.TTL / 2;
     private static final long RETRY_REPUBLISH_SEC = 5;
     private static final long REPEATED_REPUBLISH_AT_STARTUP_SEC = 60;
 
@@ -87,13 +87,13 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final KeyRing keyRing;
-    private final ArbitratorService arbitratorService;
+    private final MediatorService mediatorService;
     private final User user;
     private final Preferences preferences;
     private final FilterManager filterManager;
-    private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
-    private List<Arbitrator> persistedAcceptedArbitrators;
-    private Timer republishArbitratorTimer, retryRepublishArbitratorTimer;
+    private final ObservableMap<NodeAddress, Mediator> mediatorsObservableMap = FXCollections.observableHashMap();
+    private List<Mediator> persistedAcceptedMediators;
+    private Timer republishMediatorTimer, retryRepublishMediatorTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,14 +101,14 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorManager(KeyRing keyRing,
-                             ArbitratorService arbitratorService,
+    public MediatorManager(KeyRing keyRing,
+                             MediatorService mediatorService,
                              User user,
                              Preferences preferences,
                              FilterManager filterManager,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.keyRing = keyRing;
-        this.arbitratorService = arbitratorService;
+        this.mediatorService = mediatorService;
         this.user = user;
         this.preferences = preferences;
         this.filterManager = filterManager;
@@ -134,8 +134,8 @@ public class ArbitratorManager {
     }
 
     public void shutDown() {
-        stopRepublishArbitratorTimer();
-        stopRetryRepublishArbitratorTimer();
+        stopRepublishMediatorTimer();
+        stopRetryRepublishMediatorTimer();
     }
 
 
@@ -144,60 +144,60 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
+        mediatorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
-                if (data.getProtectedStoragePayload() instanceof Arbitrator)
-                    updateArbitratorMap();
+                if (data.getProtectedStoragePayload() instanceof Mediator)
+                    updateMediatorMap();
             }
 
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
-                if (data.getProtectedStoragePayload() instanceof Arbitrator) {
-                    updateArbitratorMap();
-                    final Arbitrator arbitrator = (Arbitrator) data.getProtectedStoragePayload();
-                    user.removeAcceptedArbitrator(arbitrator);
-                    //user.removeAcceptedMediator(getMediator(mediator));
+                if (data.getProtectedStoragePayload() instanceof Mediator) {
+                    updateMediatorMap();
+                    final Mediator mediator = (Mediator) data.getProtectedStoragePayload();
+                    user.removeAcceptedMediator(mediator);
+                    user.removeAcceptedMediator(getMediator(mediator));
                 }
             }
         });
 
-        persistedAcceptedArbitrators = new ArrayList<>(user.getAcceptedArbitrators());
-        user.clearAcceptedArbitrators();
+        persistedAcceptedMediators = new ArrayList<>(user.getAcceptedMediators());
+        user.clearAcceptedMediators();
 
-        // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
-        //user.clearAcceptedMediators();
+        // TODO we mirror mediator data for mediator as long we have not impl. it in the UI
+        user.clearAcceptedMediators();
 
-        if (user.getRegisteredArbitrator() != null) {
-            P2PService p2PService = arbitratorService.getP2PService();
+        if (user.getRegisteredMediator() != null) {
+            P2PService p2PService = mediatorService.getP2PService();
             if (p2PService.isBootstrapped())
-                startRepublishArbitrator();
+                startRepublishMediator();
             else
                 p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
                     public void onUpdatedDataReceived() {
-                        startRepublishArbitrator();
+                        startRepublishMediator();
                     }
                 });
         }
 
-        filterManager.filterProperty().addListener((observable, oldValue, newValue) -> updateArbitratorMap());
+        filterManager.filterProperty().addListener((observable, oldValue, newValue) -> updateMediatorMap());
 
-        updateArbitratorMap();
+        updateMediatorMap();
     }
 
-    private void startRepublishArbitrator() {
-        if (republishArbitratorTimer == null) {
-            republishArbitratorTimer = UserThread.runPeriodically(this::republishArbitrator, REPUBLISH_MILLIS, TimeUnit.MILLISECONDS);
-            UserThread.runAfter(this::republishArbitrator, REPEATED_REPUBLISH_AT_STARTUP_SEC);
-            republishArbitrator();
+    private void startRepublishMediator() {
+        if (republishMediatorTimer == null) {
+            republishMediatorTimer = UserThread.runPeriodically(this::republishMediator, REPUBLISH_MILLIS, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(this::republishMediator, REPEATED_REPUBLISH_AT_STARTUP_SEC);
+            republishMediator();
         }
     }
 
-    public void updateArbitratorMap() {
-        Map<NodeAddress, Arbitrator> map = arbitratorService.getArbitrators();
-        arbitratorsObservableMap.clear();
-        Map<NodeAddress, Arbitrator> filtered = map.values().stream()
+    public void updateMediatorMap() {
+        Map<NodeAddress, Mediator> map = mediatorService.getMediators();
+        mediatorsObservableMap.clear();
+        Map<NodeAddress, Mediator> filtered = map.values().stream()
                 .filter(e -> {
                     final String pubKeyAsHex = Utils.HEX.encode(e.getRegistrationPubKey());
                     final boolean isInPublicKeyInList = isPublicKeyInList(pubKeyAsHex);
@@ -207,7 +207,7 @@ public class ArbitratorManager {
                                     Utilities.bytesAsHexString(e.getRegistrationPubKey()),
                                     e.getNodeAddress().getFullAddress());
                         else
-                            log.warn("We got an arbitrator which is not in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
+                            log.warn("We got an mediator which is not in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
                                     Utilities.bytesAsHexString(e.getRegistrationPubKey()),
                                     e.getNodeAddress().getFullAddress());
                     }
@@ -215,79 +215,79 @@ public class ArbitratorManager {
                             e.getRegistrationPubKey(),
                             e.getRegistrationSignature());
                     if (!isSigValid)
-                        log.warn("Sig check for arbitrator failed. Arbitrator=", e.toString());
+                        log.warn("Sig check for mediator failed. Mediator=", e.toString());
 
                     return isInPublicKeyInList && isSigValid;
                 })
-                .collect(Collectors.toMap(Arbitrator::getNodeAddress, Function.identity()));
+                .collect(Collectors.toMap(Mediator::getNodeAddress, Function.identity()));
 
-        arbitratorsObservableMap.putAll(filtered);
-        arbitratorsObservableMap.values().stream()
-                .filter(persistedAcceptedArbitrators::contains)
+        mediatorsObservableMap.putAll(filtered);
+        mediatorsObservableMap.values().stream()
+                .filter(persistedAcceptedMediators::contains)
                 .forEach(a -> {
-                    user.addAcceptedArbitrator(a);
-                    //user.addAcceptedMediator(getMediator(a));
+                    user.addAcceptedMediator(a);
+                    user.addAcceptedMediator(getMediator(a)
+                    );
                 });
 
-        // We keep the domain with storing the arbitrators in user as it might be still useful for mediators
-        arbitratorsObservableMap.values().forEach(a -> {
-            user.addAcceptedArbitrator(a);
-            //user.addAcceptedMediator(getMediator(a));
+        // We keep the domain with storing the mediators in user as it might be still useful for mediators
+        mediatorsObservableMap.values().forEach(a -> {
+            user.addAcceptedMediator(a);
+            user.addAcceptedMediator(getMediator(a)
+            );
         });
 
-        log.info("Available arbitrators: {}", arbitratorsObservableMap.keySet());
+        log.info("Available mediators: {}", mediatorsObservableMap.keySet());
     }
 
-    // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
-	/* Moved to new location
+    // TODO we mirror mediator data for mediator as long we have not impl. it in the UI
     @NotNull
-    public static Mediator getMediator(Arbitrator arbitrator) {
-        return new Mediator(arbitrator.getNodeAddress(),
-                arbitrator.getPubKeyRing(),
-                arbitrator.getLanguageCodes(),
-                arbitrator.getRegistrationDate(),
-                arbitrator.getRegistrationPubKey(),
-                arbitrator.getRegistrationSignature(),
-                arbitrator.getEmailAddress(),
+    public static Mediator getMediator(Mediator mediator) {
+        return new Mediator(mediator.getNodeAddress(),
+                mediator.getPubKeyRing(),
+                mediator.getLanguageCodes(),
+                mediator.getRegistrationDate(),
+                mediator.getRegistrationPubKey(),
+                mediator.getRegistrationSignature(),
+                mediator.getEmailAddress(),
                 null,
-                arbitrator.getExtraDataMap());
+                mediator.getExtraDataMap());
     }
-	*/
 
-    public void addArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        user.setRegisteredArbitrator(arbitrator);
-        arbitratorsObservableMap.put(arbitrator.getNodeAddress(), arbitrator);
-        arbitratorService.addArbitrator(arbitrator,
+    public void addMediator(Mediator mediator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        user.setRegisteredMediator(mediator);
+        mediatorsObservableMap.put(mediator.getNodeAddress(), mediator);
+        mediatorService.addMediator(mediator,
                 () -> {
-                    log.debug("Arbitrator successfully saved in P2P network");
+                    log.debug("Mediator successfully saved in P2P network");
                     resultHandler.handleResult();
 
-                    if (arbitratorsObservableMap.size() > 0)
-                        UserThread.runAfter(this::updateArbitratorMap, 100, TimeUnit.MILLISECONDS);
+                    if (mediatorsObservableMap.size() > 0)
+                        UserThread.runAfter(this::updateMediatorMap, 100, TimeUnit.MILLISECONDS);
                 },
                 errorMessageHandler::handleErrorMessage);
     }
 
-    public void removeArbitrator(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
-        if (registeredArbitrator != null) {
-            user.setRegisteredArbitrator(null);
-            arbitratorsObservableMap.remove(registeredArbitrator.getNodeAddress());
-            arbitratorService.removeArbitrator(registeredArbitrator,
+    public void removeMediator(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        Mediator registeredMediator = user.getRegisteredMediator();
+        if (registeredMediator != null) {
+            user.setRegisteredMediator(null);
+            mediatorsObservableMap.remove(registeredMediator.getNodeAddress());
+            mediatorService.removeMediator(registeredMediator,
                     () -> {
-                        log.debug("Arbitrator successfully removed from P2P network");
+                        log.debug("Mediator successfully removed from P2P network");
                         resultHandler.handleResult();
                     },
                     errorMessageHandler::handleErrorMessage);
         }
     }
 
-    public ObservableMap<NodeAddress, Arbitrator> getArbitratorsObservableMap() {
-        return arbitratorsObservableMap;
+    public ObservableMap<NodeAddress, Mediator> getMediatorsObservableMap() {
+        return mediatorsObservableMap;
     }
 
-    // A private key is handed over to selected arbitrators for registration.
-    // An invited arbitrator will sign at registration his storageSignaturePubKey with that private key and attach the signature and pubKey to his data.
+    // A private key is handed over to selected mediators for registration.
+    // An invited mediator will sign at registration his storageSignaturePubKey with that private key and attach the signature and pubKey to his data.
     // Other users will check the signature with the list of public keys hardcoded in the app.
     public String signStorageSignaturePubKey(ECKey key) {
         String keyToSignAsHex = Utils.HEX.encode(keyRing.getPubKeyRing().getSignaturePubKey().getEncoded());
@@ -307,15 +307,15 @@ public class ArbitratorManager {
         return publicKeys.contains(pubKeyAsHex);
     }
 
-    public boolean isArbitratorAvailableForLanguage(String languageCode) {
-        return arbitratorsObservableMap.values().stream().anyMatch(arbitrator ->
-                arbitrator.getLanguageCodes().stream().anyMatch(lc -> lc.equals(languageCode)));
+    public boolean isMediatorAvailableForLanguage(String languageCode) {
+        return mediatorsObservableMap.values().stream().anyMatch(mediator ->
+                mediator.getLanguageCodes().stream().anyMatch(lc -> lc.equals(languageCode)));
     }
 
-    public List<String> getArbitratorLanguages(List<NodeAddress> nodeAddresses) {
-        return arbitratorsObservableMap.values().stream()
-                .filter(arbitrator -> nodeAddresses.stream().anyMatch(nodeAddress -> nodeAddress.equals(arbitrator.getNodeAddress())))
-                .flatMap(arbitrator -> arbitrator.getLanguageCodes().stream())
+    public List<String> getMediatorLanguages(List<NodeAddress> nodeAddresses) {
+        return mediatorsObservableMap.values().stream()
+                .filter(mediator -> nodeAddresses.stream().anyMatch(nodeAddress -> nodeAddress.equals(mediator.getNodeAddress())))
+                .flatMap(mediator -> mediator.getLanguageCodes().stream())
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -324,16 +324,16 @@ public class ArbitratorManager {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void republishArbitrator() {
-        Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
-        if (registeredArbitrator != null) {
-            addArbitrator(registeredArbitrator,
-                    this::updateArbitratorMap,
+    private void republishMediator() {
+        Mediator registeredMediator = user.getRegisteredMediator();
+        if (registeredMediator != null) {
+            addMediator(registeredMediator,
+                    this::updateMediatorMap,
                     errorMessage -> {
-                        if (retryRepublishArbitratorTimer == null)
-                            retryRepublishArbitratorTimer = UserThread.runPeriodically(() -> {
-                                stopRetryRepublishArbitratorTimer();
-                                republishArbitrator();
+                        if (retryRepublishMediatorTimer == null)
+                            retryRepublishMediatorTimer = UserThread.runPeriodically(() -> {
+                                stopRetryRepublishMediatorTimer();
+                                republishMediator();
                             }, RETRY_REPUBLISH_SEC);
                     }
             );
@@ -353,23 +353,23 @@ public class ArbitratorManager {
     }
 
 
-    private void stopRetryRepublishArbitratorTimer() {
-        if (retryRepublishArbitratorTimer != null) {
-            retryRepublishArbitratorTimer.stop();
-            retryRepublishArbitratorTimer = null;
+    private void stopRetryRepublishMediatorTimer() {
+        if (retryRepublishMediatorTimer != null) {
+            retryRepublishMediatorTimer.stop();
+            retryRepublishMediatorTimer = null;
         }
     }
 
-    private void stopRepublishArbitratorTimer() {
-        if (republishArbitratorTimer != null) {
-            republishArbitratorTimer.stop();
-            republishArbitratorTimer = null;
+    private void stopRepublishMediatorTimer() {
+        if (republishMediatorTimer != null) {
+            republishMediatorTimer.stop();
+            republishMediatorTimer = null;
         }
     }
 
-    public Optional<Arbitrator> getArbitratorByNodeAddress(NodeAddress nodeAddress) {
-        return arbitratorsObservableMap.containsKey(nodeAddress) ?
-                Optional.of(arbitratorsObservableMap.get(nodeAddress)) :
+    public Optional<Mediator> getMediatorByNodeAddress(NodeAddress nodeAddress) {
+        return mediatorsObservableMap.containsKey(nodeAddress) ?
+                Optional.of(mediatorsObservableMap.get(nodeAddress)) :
                 Optional.empty();
     }
 }

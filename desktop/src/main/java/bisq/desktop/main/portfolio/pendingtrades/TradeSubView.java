@@ -54,7 +54,11 @@ public abstract class TradeSubView extends HBox {
     protected AnchorPane contentPane;
     protected TradeStepView tradeStepView;
     private AutoTooltipButton openDisputeButton;
+    private AutoTooltipButton openMediationButton;
+    private AutoTooltipButton traderCommButton;
     private NotificationGroup notificationGroup;
+    private NotificationGroup mediationNotificationGroup;
+    private NotificationGroup traderCommNotificationGroup;
     protected GridPane leftGridPane;
     protected TitledGroupBg tradeProcessTitledGroupBg;
     protected int leftGridPaneRowIndex = 0;
@@ -84,8 +88,20 @@ public abstract class TradeSubView extends HBox {
         if (openDisputeButton != null)
             leftGridPane.getChildren().remove(openDisputeButton);
 
+        if (openMediationButton != null)
+            leftGridPane.getChildren().remove(openMediationButton);
+
+        if (traderCommButton != null)
+            leftGridPane.getChildren().remove(traderCommButton);
+
         if (notificationGroup != null)
             notificationGroup.removeItselfFrom(leftGridPane);
+
+        if (mediationNotificationGroup != null)
+            mediationNotificationGroup.removeItselfFrom(leftGridPane);
+
+        if (traderCommNotificationGroup != null)
+            traderCommNotificationGroup.removeItselfFrom(leftGridPane);
     }
 
     private void buildViews() {
@@ -117,6 +133,33 @@ public abstract class TradeSubView extends HBox {
         notificationGroup = new NotificationGroup(noticeTitledGroupBg, label, openDisputeButton);
         notificationGroup.setLabelAndHeadlineVisible(false);
         notificationGroup.setButtonVisible(false);
+
+		// Add Mediation Request Button
+        TitledGroupBg mediationTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", 0);
+        mediationTitledGroupBg.getStyleClass().add("last");
+
+        Label mediationLabel = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "",
+                Layout.FIRST_ROW_DISTANCE);
+        openMediationButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openMediation"));
+        GridPane.setColumnIndex(openMediationButton, 0);
+        openMediationButton.setId("open-mediation-button");
+
+        mediationNotificationGroup = new NotificationGroup(mediationTitledGroupBg, mediationLabel, openMediationButton);
+        mediationNotificationGroup.setLabelAndHeadlineVisible(false);
+        mediationNotificationGroup.setButtonVisible(false);
+
+		// Add Trader to Trader Comm Button
+        TitledGroupBg traderCommTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", 0);
+        traderCommTitledGroupBg.getStyleClass().add("last");
+
+        Label traderCommLabel = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "", Layout.FIRST_ROW_DISTANCE);
+        traderCommButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.traderCommButton"));
+        GridPane.setColumnIndex(traderCommButton, 0);
+        traderCommButton.setId("open-tradercomm-button");
+
+        traderCommNotificationGroup = new NotificationGroup(traderCommTitledGroupBg, traderCommLabel, traderCommButton);
+        traderCommNotificationGroup.setLabelAndHeadlineVisible(true);
+        traderCommNotificationGroup.setButtonVisible(true);
     }
 
     public static class NotificationGroup {
@@ -184,6 +227,8 @@ public abstract class TradeSubView extends HBox {
             tradeStepView = viewClass.getDeclaredConstructor(PendingTradesViewModel.class).newInstance(model);
             contentPane.getChildren().setAll(tradeStepView);
             tradeStepView.setNotificationGroup(notificationGroup);
+            tradeStepView.setNotificationGroup(mediationNotificationGroup);
+            tradeStepView.setNotificationGroup(traderCommNotificationGroup);
             tradeStepView.activate();
         } catch (Exception e) {
             log.error("Creating viewClass {} caused an error {}", viewClass, e.getMessage());
@@ -204,6 +249,3 @@ public abstract class TradeSubView extends HBox {
         getChildren().add(contentPane);
     }
 }
-
-
-
