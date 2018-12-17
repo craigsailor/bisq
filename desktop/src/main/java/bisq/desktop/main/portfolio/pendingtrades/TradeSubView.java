@@ -121,18 +121,20 @@ public abstract class TradeSubView extends HBox {
 
         addWizards();
 
-        TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "",
-                0);
-        noticeTitledGroupBg.getStyleClass().add("last");
-        Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "",
-                Layout.FIRST_ROW_DISTANCE);
-        openDisputeButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openDispute"));
-        GridPane.setColumnIndex(openDisputeButton, 0);
-        openDisputeButton.setId("open-dispute-button");
+		// Add Trader to Trader Comm Button
+        traderCommButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.traderCommButton"));
+        GridPane.setColumnIndex(traderCommButton, 0);
+        traderCommButton.setId("open-tradercomm-button");
+        traderCommButton.setVisible(true);
+        traderCommButton.setManaged(true);
 
-        notificationGroup = new NotificationGroup(noticeTitledGroupBg, label, openDisputeButton);
-        notificationGroup.setLabelAndHeadlineVisible(false);
-        notificationGroup.setButtonVisible(false);
+// TODO: Activate this part to make the button do something
+/*
+		// Add action to comm button
+		traderCommButton.setOnAction(e -> {
+			model.dataModel.onOpenDispute();
+		});
+*/
 
 		// Add Mediation Request Button
         TitledGroupBg mediationTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", 0);
@@ -147,19 +149,6 @@ public abstract class TradeSubView extends HBox {
         mediationNotificationGroup = new NotificationGroup(mediationTitledGroupBg, mediationLabel, openMediationButton);
         mediationNotificationGroup.setLabelAndHeadlineVisible(false);
         mediationNotificationGroup.setButtonVisible(false);
-
-		// Add Trader to Trader Comm Button
-        TitledGroupBg traderCommTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", 0);
-        traderCommTitledGroupBg.getStyleClass().add("last");
-
-        Label traderCommLabel = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "", Layout.FIRST_ROW_DISTANCE);
-        traderCommButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.traderCommButton"));
-        GridPane.setColumnIndex(traderCommButton, 0);
-        traderCommButton.setId("open-tradercomm-button");
-
-        traderCommNotificationGroup = new NotificationGroup(traderCommTitledGroupBg, traderCommLabel, traderCommButton);
-        traderCommNotificationGroup.setLabelAndHeadlineVisible(true);
-        traderCommNotificationGroup.setButtonVisible(true);
     }
 
     public static class NotificationGroup {
