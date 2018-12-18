@@ -30,14 +30,13 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
 
-import bisq.common.handlers.ErrorMessageHandler;
-
 import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,7 +58,9 @@ public abstract class BsqNode implements DaoSetupService {
     protected boolean parseBlockchainComplete;
     protected boolean p2pNetworkReady;
     @Nullable
-    protected ErrorMessageHandler errorMessageHandler;
+    protected Consumer<String> errorMessageHandler;
+    @Nullable
+    protected Consumer<String> warnMessageHandler;
     protected List<RawBlock> pendingBlocks = new ArrayList<>();
 
 
@@ -134,8 +135,12 @@ public abstract class BsqNode implements DaoSetupService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setErrorMessageHandler(@Nullable ErrorMessageHandler errorMessageHandler) {
+    public void setErrorMessageHandler(Consumer<String> errorMessageHandler) {
         this.errorMessageHandler = errorMessageHandler;
+    }
+
+    public void setWarnMessageHandler(Consumer<String> warnMessageHandler) {
+        this.warnMessageHandler = warnMessageHandler;
     }
 
     public abstract void shutDown();
@@ -215,16 +220,10 @@ public abstract class BsqNode implements DaoSetupService {
             // After parsing we check if we have pending blocks we might have received earlier but which have been
             // not connecting from the latest height we had. The list is sorted by height
             if (!pendingBlocks.isEmpty()) {
-                // To avoid ConcurrentModificationException we copy the list. It might be altered in the method call
-                ArrayList<RawBlock> tempPendingBlocks = new ArrayList<>(pendingBlocks);
-                for (RawBlock tempPendingBlock : tempPendingBlocks) {
-                    try {
-                        doParseBlock(tempPendingBlock);
-                    } catch (RequiredReorgFromSnapshotException e1) {
-                        // In case we got a reorg we break the iteration
-                        break;
-                    }
-                }
+                // We take only first element after sorting (so it is the block with the next height) to avoid that
+                // we would repeat calls in recursions in case we  would iterate the list.
+                pendingBlocks.sort(Comparator.comparing(RawBlock::getHeight));
+                doParseBlock(pendingBlocks.get(0));
             }
 
             return Optional.of(block);
@@ -235,10 +234,13 @@ public abstract class BsqNode implements DaoSetupService {
 
             int heightForNextBlock = daoStateService.getChainHeight() + 1;
             if (rawBlock.getHeight() > heightForNextBlock) {
-                pendingBlocks.add(rawBlock);
-                pendingBlocks.sort(Comparator.comparing(RawBlock::getHeight));
-                log.info("We received an block with a future block height. We store it as pending and try to apply " +
-                        "it at the next block. rawBlock: height/hash={}/{}", rawBlock.getHeight(), rawBlock.getHash());
+                if (!pendingBlocks.contains(rawBlock)) {
+                    pendingBlocks.add(rawBlock);
+                    log.info("We received an block with a future block height. We store it as pending and try to apply " +
+                            "it at the next block. rawBlock: height/hash={}/{}", rawBlock.getHeight(), rawBlock.getHash());
+                } else {
+                    log.warn("We received an block with a future block height but we had it already added to our pendingBlocks.");
+                }
             } else if (rawBlock.getHeight() >= daoStateService.getGenesisBlockHeight()) {
                 // We received an older block. We compare if we have it in our chain.
                 Optional<Block> optionalBlock = daoStateService.getBlockAtHeight(rawBlock.getHeight());
