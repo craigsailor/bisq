@@ -57,6 +57,8 @@ message NetworkEnvelope {
         AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
         AckMessage ack_message = 32;
         RepublishGovernanceDataRequest republish_governance_data_request = 33;
+
+		RequestMediationMessage request_mediation_message = 34;
     }
 }
 
@@ -255,6 +257,12 @@ message PayoutTxPublishedMessage {
 // dispute
 
 message OpenNewDisputeMessage {
+    Dispute dispute = 1;
+    NodeAddress sender_node_address = 2;
+    string uid = 3;
+}
+
+message RequestMediationMessage {
     Dispute dispute = 1;
     NodeAddress sender_node_address = 2;
     string uid = 3;
@@ -606,6 +614,7 @@ message Dispute {
     bool is_closed = 21;
     DisputeResult dispute_result = 22;
     string dispute_payout_tx_id = 23;
+    PubKeyRing mediator_pub_key_ring = 24;
 }
 
 message Attachment {
@@ -646,6 +655,8 @@ message DisputeResult {
     bytes arbitrator_pub_key = 13;
     int64 close_date = 14;
     bool is_loser_publisher = 15;
+    bytes mediator_signature = 16;
+    bytes mediator_pub_key = 17;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

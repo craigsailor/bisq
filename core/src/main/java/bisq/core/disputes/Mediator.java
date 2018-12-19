@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.arbitration;
+package bisq.core.disputes;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
@@ -50,6 +50,8 @@ import javax.annotation.Nullable;
 @ToString
 @Getter
 public final class Mediator implements ProtectedStoragePayload, ExpirablePayload {
+	public static final long TTL = TimeUnit.DAYS.toMillis(10);
+
     private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
     private final List<String> languageCodes;

@@ -20,7 +20,7 @@ package bisq.core.proto.network;
 import bisq.core.alert.Alert;
 import bisq.core.alert.PrivateNotificationMessage;
 import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.Mediator;
+import bisq.core.disputes.Mediator;
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.arbitration.messages.DisputeResultMessage;
 import bisq.core.arbitration.messages.OpenNewDisputeMessage;
