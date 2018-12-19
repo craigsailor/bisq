@@ -25,13 +25,13 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.arbitratorregistration.ArbitratorRegistrationView;
-import bisq.desktop.main.account.mediatorregistration.MediatorRegistrationView;
 import bisq.desktop.main.account.content.altcoinaccounts.AltCoinAccountsView;
 import bisq.desktop.main.account.content.backup.BackupView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.content.notifications.MobileNotificationsView;
 import bisq.desktop.main.account.content.password.PasswordView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
+import bisq.desktop.main.account.mediatorregistration.MediatorRegistrationView;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
@@ -97,8 +97,8 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         seedwordsTab.setText(Res.get("account.menu.seedWords").toUpperCase());
         backupTab.setText(Res.get("account.menu.backup").toUpperCase());
 
-		// Mediator view added here but not sure if this is 100% correct.
-		// No problem though since it will replace the Arbitrator eventually.
+        // Mediator view added here but not sure if this is 100% correct.
+        // No problem though since it will replace the Arbitrator eventually.
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
                 if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class))
@@ -113,20 +113,17 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         };
 
         keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) &&
+            if (Utilities.isAltOrCtrlPressed(KeyCode.Y, event) &&
                     arbitratorRegistrationTab == null) {
+                // TODO: This can be removed once we don't support arbitrators anymore
                 arbitratorRegistrationTab = new Tab(Res.get("account.tab.arbitratorRegistration").toUpperCase());
                 arbitratorRegistrationTab.setClosable(true);
                 root.getTabs().add(arbitratorRegistrationTab);
 
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
-            }
-        };
-
-		// Keypress to open AddMediator
-        keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.M, event) &&
+            } else if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) &&
                     mediatorRegistrationTab == null) {
+                // Keypress to open AddMediator
                 mediatorRegistrationTab = new Tab(Res.get("account.tab.mediatorRegistration").toUpperCase());
                 mediatorRegistrationTab.setClosable(true);
                 root.getTabs().add(mediatorRegistrationTab);

@@ -125,7 +125,7 @@ public class UnlockMediatorRegistrationWindow extends Overlay<UnlockMediatorRegi
         keyInputTextField.textProperty().addListener(changeListener);
     }
 
-    private void addButtons() {
+    protected void addButtons() {
         final Tuple2<Button, Button> buttonButtonTuple2 = add2ButtonsAfterGroup(gridPane, ++rowIndex,
                 Res.get("shared.unlock"), Res.get("shared.close"));
         unlockButton = buttonButtonTuple2.first;
