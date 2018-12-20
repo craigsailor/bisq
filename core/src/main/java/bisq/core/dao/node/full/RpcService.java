@@ -30,6 +30,7 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Utils;
 
 import com.neemre.btcdcli4j.core.BitcoindException;
+import com.neemre.btcdcli4j.core.BtcdCli4jVersion;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.client.BtcdClient;
 import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
@@ -107,6 +108,8 @@ public class RpcService {
         this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
 
         this.dumpBlockchainData = dumpBlockchainData;
+
+        log.info("Version of btcd-cli4j library: {}", BtcdCli4jVersion.VERSION);
     }
 
 
@@ -135,7 +138,11 @@ public class RpcService {
 
                 nodeConfig.setProperty("node.bitcoind.http.auth_scheme", "Basic");
                 BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
-                daemon = new BtcdDaemonImpl(client);
+                daemon = new BtcdDaemonImpl(client, throwable -> {
+                    log.error(throwable.toString());
+                    throwable.printStackTrace();
+                    UserThread.execute(() -> errorHandler.accept(new RpcException(throwable)));
+                });
                 log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
                 this.client = client;
             } catch (BitcoindException | CommunicationException e) {
