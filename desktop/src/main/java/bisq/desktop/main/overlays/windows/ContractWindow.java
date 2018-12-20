@@ -22,8 +22,8 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.Layout;
 
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
+import bisq.core.disputes.Mediation;
+import bisq.core.disputes.MediationManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -156,7 +156,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
                 sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
 
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.getArbitratorNodeAddress().getFullAddress());
+        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.mediator"), contract.getMediatorNodeAddress().getFullAddress());
 
         if (showAcceptedCountryCodes) {
             String countries;

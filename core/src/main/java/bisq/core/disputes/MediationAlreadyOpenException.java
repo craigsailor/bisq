@@ -17,8 +17,8 @@
 
 package bisq.core.disputes;
 
-public class DisputeAlreadyOpenException extends Exception {
-    public DisputeAlreadyOpenException() {
+public class MediationAlreadyOpenException extends Exception {
+    public MediationAlreadyOpenException() {
         super();
     }
 }

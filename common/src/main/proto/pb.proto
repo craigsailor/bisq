@@ -59,6 +59,11 @@ message NetworkEnvelope {
         RepublishGovernanceDataRequest republish_governance_data_request = 33;
 
 		RequestMediationMessage request_mediation_message = 34;
+        OpenNewMediationMessage open_new_mediation_message = 35;
+        MediationResultMessage mediation_result_message = 36;
+        PeerOpenedMediationMessage peer_opened_mediation_message = 37;
+        MediationCommunicationMessage mediation_communication_message = 38;
+
     }
 }
 
@@ -263,7 +268,42 @@ message OpenNewDisputeMessage {
 }
 
 message RequestMediationMessage {
-    Dispute dispute = 1;
+    Mediation mediation = 1;
+    NodeAddress sender_node_address = 2;
+    string uid = 3;
+}
+
+message OpenNewMediationMessage {
+    Mediation mediation = 1;
+    NodeAddress sender_node_address = 2;
+    string uid = 3;
+}
+
+message MediationCommunicationMessage {
+    int64 date = 1;
+    string trade_id = 2;
+    int32 trader_id = 3;
+    bool sender_is_trader = 4;
+    string message = 5;
+    repeated Attachment attachments = 6;
+    bool arrived = 7;
+    bool stored_in_mailbox = 8;
+    bool is_system_message = 9;
+    NodeAddress sender_node_address = 10;
+    string uid = 11;
+    string send_message_error = 12;
+    bool acknowledged = 13;
+    string ack_error = 14;
+}
+
+message MediationResultMessage {
+    string uid = 1;
+    MediationResult mediation_result = 2;
+    NodeAddress sender_node_address = 3;
+}
+
+message PeerOpenedMediationMessage {
+    Mediation mediation = 1;
     NodeAddress sender_node_address = 2;
     string uid = 3;
 }
@@ -303,7 +343,6 @@ message PeerPublishedDisputePayoutTxMessage {
     string trade_id = 3;
     NodeAddress sender_node_address = 4;
 }
-
 
 message PrivateNotificationMessage {
     string uid = 1;
@@ -586,9 +625,74 @@ message AccountAgeWitness {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Dispute payload
+// Mediation payload
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+message Mediation {
+    string trade_id = 1;
+    string id = 2;
+    int32 trader_id = 3;
+    bool mediation_opener_is_buyer = 4;
+    bool mediation_opener_is_maker = 5;
+    int64 opening_date = 6;
+    PubKeyRing trader_pub_key_ring = 7;
+    int64 trade_date = 8;
+    Contract contract = 9;
+    bytes contract_hash = 10;
+    bytes deposit_tx_serialized = 11;
+// TODO: Change since mediation does not have automatic payout
+//    bytes payout_tx_serialized = 12;
+    string deposit_tx_id = 13;
+// TODO: Change since mediation does not have automatic payout
+//    string payout_tx_id = 14;
+    string contract_as_json = 15;
+    string maker_contract_signature = 16;
+    string taker_contract_signature = 17;
+    bool is_support_ticket = 19;
+    repeated MediationCommunicationMessage mediation_communication_messages = 20;
+    bool is_closed = 21;
+    MediationResult mediation_result = 22;
+    PubKeyRing mediator_pub_key_ring = 23;
+}
+
+message MediationResult {
+    enum Winner {
+        PB_ERROR_WINNER = 0;
+        BUYER = 1;
+        SELLER = 2;
+    }
+
+    enum Reason {
+        PB_ERROR_REASON = 0;
+        OTHER = 1;
+        BUG = 2;
+        USABILITY = 3;
+        SCAM = 4;
+        PROTOCOL_VIOLATION = 5;
+        NO_REPLY = 6;
+        BANK_PROBLEMS = 7;
+    }
+
+    string trade_id = 1;
+    int32 trader_id = 2;
+    Winner winner = 3;
+    int32 reason_ordinal = 4;
+    bool tamper_proof_evidence = 5;
+    bool id_verification = 6;
+    bool screen_cast = 7;
+    string summary_notes = 8;
+    MediationCommunicationMessage mediation_communication_message = 9;
+    int64 buyer_payout_amount = 11;
+    int64 seller_payout_amount = 12;
+    int64 close_date = 14;
+    bool is_loser_publisher = 15;
+    bytes mediator_signature = 16;
+    bytes mediator_pub_key = 17;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Dispute payload
+///////////////////////////////////////////////////////////////////////////////////////////
 
 message Dispute {
     string trade_id = 1;
@@ -614,7 +718,6 @@ message Dispute {
     bool is_closed = 21;
     DisputeResult dispute_result = 22;
     string dispute_payout_tx_id = 23;
-    PubKeyRing mediator_pub_key_ring = 24;
 }
 
 message Attachment {
@@ -961,6 +1064,7 @@ message PersistableEnvelope {
         DaoStateStore dao_state_store = 24;
         MyReputationList my_reputation_list = 25;
         MyProofOfBurnList my_proof_of_burn_list = 26;
+        MediationList mediation_list = 27;
     }
 }
 
@@ -1147,6 +1251,14 @@ message Trade {
         DISPUTE_CLOSED = 4;
     }
 
+    enum MediationState {
+        PB_ERROR_MEDIATION_STATE = 0;
+        NO_MEDIATION = 1;
+        MEDIATION_REQUESTED = 2;
+        MEDIATION_STARTED_BY_PEER = 3;
+        MEDIATION_CLOSED = 4;
+    }
+
     enum TradePeriodState {
         PB_ERROR_TRADE_PERIOD_STATE = 0;
         FIRST_HALF = 1;
@@ -1243,6 +1355,14 @@ message TradingPeer {
 
 message DisputeList {
     repeated Dispute dispute = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Mediation
+///////////////////////////////////////////////////////////////////////////////////////////
+
+message MediationList {
+    repeated Mediation mediation = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

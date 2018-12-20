@@ -42,23 +42,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 /**
- * Holds a List of Dispute objects.
+ * Holds a List of Mediation objects.
  *
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public final class DisputeList implements PersistableEnvelope, PersistedDataHost {
-    transient private final Storage<DisputeList> storage;
+public final class MediationList implements PersistableEnvelope, PersistedDataHost {
+    transient private final Storage<MediationList> storage;
     @Getter
-    private final ObservableList<Dispute> list = FXCollections.observableArrayList();
+    private final ObservableList<Mediation> list = FXCollections.observableArrayList();
 
-    public DisputeList(Storage<DisputeList> storage) {
+    public MediationList(Storage<MediationList> storage) {
         this.storage = storage;
     }
 
     @Override
     public void readPersisted() {
-        DisputeList persisted = storage.initAndGetPersisted(this, 50);
+        MediationList persisted = storage.initAndGetPersisted(this, 50);
         if (persisted != null)
             list.addAll(persisted.getList());
     }
@@ -67,27 +67,27 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DisputeList(Storage<DisputeList> storage, List<Dispute> list) {
+    private MediationList(Storage<MediationList> storage, List<Mediation> list) {
         this.storage = storage;
         this.list.addAll(list);
     }
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setDisputeList(PB.DisputeList.newBuilder()
-                .addAllDispute(ProtoUtil.collectionToProto(list))).build();
+        return PB.PersistableEnvelope.newBuilder().setMediationList(PB.MediationList.newBuilder()
+                .addAllMediation(ProtoUtil.collectionToProto(list))).build();
     }
 
-    public static DisputeList fromProto(PB.DisputeList proto,
+    public static MediationList fromProto(PB.MediationList proto,
                                         CoreProtoResolver coreProtoResolver,
-                                        Storage<DisputeList> storage) {
-        log.debug("DisputeList fromProto of {} ", proto);
+                                        Storage<MediationList> storage) {
+        log.debug("MediationList fromProto of {} ", proto);
 
-        List<Dispute> list = proto.getDisputeList().stream()
-                .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
+        List<Mediation> list = proto.getMediationList().stream()
+                .map(mediationProto -> Mediation.fromProto(mediationProto, coreProtoResolver))
                 .collect(Collectors.toList());
         list.forEach(e -> e.setStorage(storage));
-        return new DisputeList(storage, list);
+        return new MediationList(storage, list);
     }
 
 
@@ -95,9 +95,9 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean add(Dispute dispute) {
-        if (!list.contains(dispute)) {
-            boolean changed = list.add(dispute);
+    public boolean add(Mediation mediation) {
+        if (!list.contains(mediation)) {
+            boolean changed = list.add(mediation);
             if (changed)
                 persist();
             return changed;
@@ -106,9 +106,9 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
         }
     }
 
-    public boolean remove(Object dispute) {
+    public boolean remove(Object mediation) {
         //noinspection SuspiciousMethodCalls
-        boolean changed = list.remove(dispute);
+        boolean changed = list.remove(mediation);
         if (changed)
             persist();
         return changed;
@@ -131,7 +131,7 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
         return list.contains(o);
     }
 
-    public Stream<Dispute> stream() {
+    public Stream<Mediation> stream() {
         return list.stream();
     }
 }

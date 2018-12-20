@@ -17,7 +17,7 @@
 
 package bisq.core.disputes.messages;
 
-import bisq.core.disputes.DisputeResult;
+import bisq.core.disputes.MediationResult;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -32,14 +32,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public final class DisputeResultMessage extends DisputeMessage {
-    private final DisputeResult disputeResult;
+public final class MediationResultMessage extends MediationMessage {
+    private final MediationResult mediationResult;
     private final NodeAddress senderNodeAddress;
 
-    public DisputeResultMessage(DisputeResult disputeResult,
+    public MediationResultMessage(MediationResult mediationResult,
                                 NodeAddress senderNodeAddress,
                                 String uid) {
-        this(disputeResult,
+        this(mediationResult,
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion());
@@ -50,28 +50,28 @@ public final class DisputeResultMessage extends DisputeMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DisputeResultMessage(DisputeResult disputeResult,
+    private MediationResultMessage(MediationResult mediationResult,
                                  NodeAddress senderNodeAddress,
                                  String uid,
                                  int messageVersion) {
         super(messageVersion, uid);
-        this.disputeResult = disputeResult;
+        this.mediationResult = mediationResult;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
-                        .setDisputeResult(disputeResult.toProtoMessage())
+                .setMediationResultMessage(PB.MediationResultMessage.newBuilder()
+                        .setMediationResult(mediationResult.toProtoMessage())
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))
                 .build();
     }
 
-    public static DisputeResultMessage fromProto(PB.DisputeResultMessage proto, int messageVersion) {
-        checkArgument(proto.hasDisputeResult(), "DisputeResult must be set");
-        return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
+    public static MediationResultMessage fromProto(PB.MediationResultMessage proto, int messageVersion) {
+        checkArgument(proto.hasMediationResult(), "MediationResult must be set");
+        return new MediationResultMessage(MediationResult.fromProto(proto.getMediationResult()),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
@@ -79,15 +79,15 @@ public final class DisputeResultMessage extends DisputeMessage {
 
     @Override
     public String getTradeId() {
-        return disputeResult.getTradeId();
+        return mediationResult.getTradeId();
     }
 
     @Override
     public String toString() {
-        return "DisputeResultMessage{" +
-                "\n     disputeResult=" + disputeResult +
+        return "MediationResultMessage{" +
+                "\n     mediationResult=" + mediationResult +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     DisputeResultMessage.uid='" + uid + '\'' +
+                ",\n     MediationResultMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 "\n} " + super.toString();
     }

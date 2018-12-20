@@ -27,10 +27,10 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public abstract class DisputeMessage extends NetworkEnvelope implements MailboxMessage, UidMessage {
+public abstract class MediationMessage extends NetworkEnvelope implements MailboxMessage, UidMessage {
     protected final String uid;
 
-    public DisputeMessage(int messageVersion, String uid) {
+    public MediationMessage(int messageVersion, String uid) {
         super(messageVersion);
         this.uid = uid;
     }
@@ -39,7 +39,7 @@ public abstract class DisputeMessage extends NetworkEnvelope implements MailboxM
 
     @Override
     public String toString() {
-        return "DisputeMessage{" +
+        return "MediationMessage{" +
                 "\n     uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 "\n} " + super.toString();

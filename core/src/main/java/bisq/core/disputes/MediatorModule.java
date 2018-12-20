@@ -31,7 +31,7 @@ public class MediatorModule extends AppModule {
     @Override
     protected final void configure() {
         bind(MediatorManager.class).in(Singleton.class);
-        bind(DisputeManager.class).in(Singleton.class);
+        bind(MediationManager.class).in(Singleton.class);
         bind(MediatorService.class).in(Singleton.class);
     }
 }

@@ -17,7 +17,7 @@
 
 package bisq.core.disputes;
 
-import bisq.core.disputes.messages.DisputeCommunicationMessage;
+import bisq.core.disputes.messages.MediationCommunicationMessage;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.Contract;
 
@@ -54,13 +54,13 @@ import javax.annotation.Nullable;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class Dispute implements NetworkPayload {
+public final class Mediation implements NetworkPayload {
     private final String tradeId;
     private final String id;
     private final int traderId;
-    private final boolean disputeOpenerIsBuyer;
-    private final boolean disputeOpenerIsMaker;
-    // PubKeyRing of trader who opened the dispute
+    private final boolean mediationOpenerIsBuyer;
+    private final boolean mediationOpenerIsMaker;
+    // PubKeyRing of trader who opened the mediation
     private final PubKeyRing traderPubKeyRing;
     private final long tradeDate;
     private final Contract contract;
@@ -68,12 +68,14 @@ public final class Dispute implements NetworkPayload {
     private final byte[] contractHash;
     @Nullable
     private final byte[] depositTxSerialized;
-    @Nullable
-    private final byte[] payoutTxSerialized;
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//    @Nullable
+//    private final byte[] payoutTxSerialized;
     @Nullable
     private final String depositTxId;
-    @Nullable
-    private final String payoutTxId;
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//    @Nullable
+//    private final String payoutTxId;
     private final String contractAsJson;
     @Nullable
     private final String makerContractSignature;
@@ -81,35 +83,38 @@ public final class Dispute implements NetworkPayload {
     private final String takerContractSignature;
     private final PubKeyRing mediatorPubKeyRing;
     private final boolean isSupportTicket;
-    private final ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages = FXCollections.observableArrayList();
+    private final ObservableList<MediationCommunicationMessage> mediationCommunicationMessages = FXCollections.observableArrayList();
     private BooleanProperty isClosedProperty = new SimpleBooleanProperty();
-    // disputeResultProperty.get is Nullable!
-    private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>();
+    // mediationResultProperty.get is Nullable!
+    private ObjectProperty<MediationResult> mediationResultProperty = new SimpleObjectProperty<>();
     @Nullable
-    private String disputePayoutTxId;
+// TODO: Change for mediation since there is no payout
+//    private String mediationPayoutTxId;
 
     private long openingDate;
 
-    transient private Storage<DisputeList> storage;
+    transient private Storage<MediationList> storage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Dispute(Storage<DisputeList> storage,
+    public Mediation(Storage<MediationList> storage,
                    String tradeId,
                    int traderId,
-                   boolean disputeOpenerIsBuyer,
-                   boolean disputeOpenerIsMaker,
+                   boolean mediationOpenerIsBuyer,
+                   boolean mediationOpenerIsMaker,
                    PubKeyRing traderPubKeyRing,
                    long tradeDate,
                    Contract contract,
                    @Nullable byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,
-                   @Nullable byte[] payoutTxSerialized,
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//                   @Nullable byte[] payoutTxSerialized,
                    @Nullable String depositTxId,
-                   @Nullable String payoutTxId,
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//                   @Nullable String payoutTxId,
                    String contractAsJson,
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
@@ -117,16 +122,18 @@ public final class Dispute implements NetworkPayload {
                    boolean isSupportTicket) {
         this(tradeId,
              traderId,
-             disputeOpenerIsBuyer,
-             disputeOpenerIsMaker,
+             mediationOpenerIsBuyer,
+             mediationOpenerIsMaker,
              traderPubKeyRing,
              tradeDate,
              contract,
              contractHash,
              depositTxSerialized,
-             payoutTxSerialized,
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//             payoutTxSerialized,
              depositTxId,
-             payoutTxId,
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//             payoutTxId,
              contractAsJson,
              makerContractSignature,
              takerContractSignature,
@@ -141,18 +148,20 @@ public final class Dispute implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Dispute(String tradeId,
+    public Mediation(String tradeId,
                    int traderId,
-                   boolean disputeOpenerIsBuyer,
-                   boolean disputeOpenerIsMaker,
+                   boolean mediationOpenerIsBuyer,
+                   boolean mediationOpenerIsMaker,
                    PubKeyRing traderPubKeyRing,
                    long tradeDate,
                    Contract contract,
                    @Nullable byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,
-                   @Nullable byte[] payoutTxSerialized,
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//                   @Nullable byte[] payoutTxSerialized,
                    @Nullable String depositTxId,
-                   @Nullable String payoutTxId,
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//                   @Nullable String payoutTxId,
                    String contractAsJson,
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
@@ -160,16 +169,18 @@ public final class Dispute implements NetworkPayload {
                    boolean isSupportTicket) {
         this.tradeId = tradeId;
         this.traderId = traderId;
-        this.disputeOpenerIsBuyer = disputeOpenerIsBuyer;
-        this.disputeOpenerIsMaker = disputeOpenerIsMaker;
+        this.mediationOpenerIsBuyer = mediationOpenerIsBuyer;
+        this.mediationOpenerIsMaker = mediationOpenerIsMaker;
         this.traderPubKeyRing = traderPubKeyRing;
         this.tradeDate = tradeDate;
         this.contract = contract;
         this.contractHash = contractHash;
         this.depositTxSerialized = depositTxSerialized;
-        this.payoutTxSerialized = payoutTxSerialized;
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//        this.payoutTxSerialized = payoutTxSerialized;
         this.depositTxId = depositTxId;
-        this.payoutTxId = payoutTxId;
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//        this.payoutTxId = payoutTxId;
         this.contractAsJson = contractAsJson;
         this.makerContractSignature = makerContractSignature;
         this.takerContractSignature = takerContractSignature;
@@ -180,20 +191,20 @@ public final class Dispute implements NetworkPayload {
     }
 
     @Override
-    public PB.Dispute toProtoMessage() {
-        PB.Dispute.Builder builder = PB.Dispute.newBuilder()
+    public PB.Mediation toProtoMessage() {
+        PB.Mediation.Builder builder = PB.Mediation.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
-                .setDisputeOpenerIsBuyer(disputeOpenerIsBuyer)
-                .setDisputeOpenerIsMaker(disputeOpenerIsMaker)
+                .setMediationOpenerIsBuyer(mediationOpenerIsBuyer)
+                .setMediationOpenerIsMaker(mediationOpenerIsMaker)
                 .setTraderPubKeyRing(traderPubKeyRing.toProtoMessage())
                 .setTradeDate(tradeDate)
                 .setContract(contract.toProtoMessage())
                 .setContractAsJson(contractAsJson)
                 .setMediatorPubKeyRing(mediatorPubKeyRing.toProtoMessage())
                 .setIsSupportTicket(isSupportTicket)
-                .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream()
-                        .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
+                .addAllMediationCommunicationMessages(mediationCommunicationMessages.stream()
+                        .map(msg -> msg.toProtoNetworkEnvelope().getMediationCommunicationMessage())
                         .collect(Collectors.toList()))
                 .setIsClosed(isClosedProperty.get())
                 .setOpeningDate(openingDate)
@@ -201,45 +212,50 @@ public final class Dispute implements NetworkPayload {
 
         Optional.ofNullable(contractHash).ifPresent(e -> builder.setContractHash(ByteString.copyFrom(e)));
         Optional.ofNullable(depositTxSerialized).ifPresent(e -> builder.setDepositTxSerialized(ByteString.copyFrom(e)));
-        Optional.ofNullable(payoutTxSerialized).ifPresent(e -> builder.setPayoutTxSerialized(ByteString.copyFrom(e)));
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//        Optional.ofNullable(payoutTxSerialized).ifPresent(e -> builder.setPayoutTxSerialized(ByteString.copyFrom(e)));
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
-        Optional.ofNullable(payoutTxId).ifPresent(builder::setPayoutTxId);
-        Optional.ofNullable(disputePayoutTxId).ifPresent(builder::setDisputePayoutTxId);
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//        Optional.ofNullable(payoutTxId).ifPresent(builder::setPayoutTxId);
+//        Optional.ofNullable(mediationPayoutTxId).ifPresent(builder::setMediationPayoutTxId);
         Optional.ofNullable(makerContractSignature).ifPresent(builder::setMakerContractSignature);
         Optional.ofNullable(takerContractSignature).ifPresent(builder::setTakerContractSignature);
-        Optional.ofNullable(disputeResultProperty.get()).ifPresent(result -> builder.setDisputeResult(disputeResultProperty.get().toProtoMessage()));
+        Optional.ofNullable(mediationResultProperty.get()).ifPresent(result -> builder.setMediationResult(mediationResultProperty.get().toProtoMessage()));
         return builder.build();
     }
 
-    public static Dispute fromProto(PB.Dispute proto, CoreProtoResolver coreProtoResolver) {
-        final Dispute dispute = new Dispute(proto.getTradeId(),
+    public static Mediation fromProto(PB.Mediation proto, CoreProtoResolver coreProtoResolver) {
+        final Mediation mediation = new Mediation(proto.getTradeId(),
                 proto.getTraderId(),
-                proto.getDisputeOpenerIsBuyer(),
-                proto.getDisputeOpenerIsMaker(),
+                proto.getMediationOpenerIsBuyer(),
+                proto.getMediationOpenerIsMaker(),
                 PubKeyRing.fromProto(proto.getTraderPubKeyRing()),
                 proto.getTradeDate(),
                 Contract.fromProto(proto.getContract(), coreProtoResolver),
                 ProtoUtil.byteArrayOrNullFromProto(proto.getContractHash()),
                 ProtoUtil.byteArrayOrNullFromProto(proto.getDepositTxSerialized()),
-                ProtoUtil.byteArrayOrNullFromProto(proto.getPayoutTxSerialized()),
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//                ProtoUtil.byteArrayOrNullFromProto(proto.getPayoutTxSerialized()),
                 ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()),
-                ProtoUtil.stringOrNullFromProto(proto.getPayoutTxId()),
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//                ProtoUtil.stringOrNullFromProto(proto.getPayoutTxId()),
                 proto.getContractAsJson(),
                 ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()),
                 ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()),
                 PubKeyRing.fromProto(proto.getMediatorPubKeyRing()),
                 proto.getIsSupportTicket());
 
-        dispute.disputeCommunicationMessages.addAll(proto.getDisputeCommunicationMessagesList().stream()
-                .map(DisputeCommunicationMessage::fromPayloadProto)
+        mediation.mediationCommunicationMessages.addAll(proto.getMediationCommunicationMessagesList().stream()
+                .map(MediationCommunicationMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 
-        dispute.openingDate = proto.getOpeningDate();
-        dispute.isClosedProperty.set(proto.getIsClosed());
-        if (proto.hasDisputeResult())
-            dispute.disputeResultProperty.set(DisputeResult.fromProto(proto.getDisputeResult()));
-        dispute.disputePayoutTxId = ProtoUtil.stringOrNullFromProto(proto.getDisputePayoutTxId());
-        return dispute;
+        mediation.openingDate = proto.getOpeningDate();
+        mediation.isClosedProperty.set(proto.getIsClosed());
+        if (proto.hasMediationResult())
+            mediation.mediationResultProperty.set(MediationResult.fromProto(proto.getMediationResult()));
+// TODO: Replace with alternative since there isn't a payout at the end of Mediation
+//        mediation.mediationPayoutTxId = ProtoUtil.stringOrNullFromProto(proto.getMediationPayoutTxId());
+        return mediation;
     }
 
 
@@ -247,12 +263,12 @@ public final class Dispute implements NetworkPayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addDisputeCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
-        if (!disputeCommunicationMessages.contains(disputeCommunicationMessage)) {
-            disputeCommunicationMessages.add(disputeCommunicationMessage);
+    public void addMediationCommunicationMessage(MediationCommunicationMessage mediationCommunicationMessage) {
+        if (!mediationCommunicationMessages.contains(mediationCommunicationMessage)) {
+            mediationCommunicationMessages.add(mediationCommunicationMessage);
             storage.queueUpForSave();
         } else {
-            log.error("disputeDirectMessage already exists");
+            log.error("mediationDirectMessage already exists");
         }
     }
 
@@ -262,7 +278,7 @@ public final class Dispute implements NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // In case we get the object via the network storage is not set as its transient, so we need to set it.
-    public void setStorage(Storage<DisputeList> storage) {
+    public void setStorage(Storage<MediationList> storage) {
         this.storage = storage;
     }
 
@@ -273,20 +289,23 @@ public final class Dispute implements NetworkPayload {
             storage.queueUpForSave();
     }
 
-    public void setDisputeResult(DisputeResult disputeResult) {
-        boolean changed = disputeResultProperty.get() == null || !disputeResultProperty.get().equals(disputeResult);
-        disputeResultProperty.set(disputeResult);
+    public void setMediationResult(MediationResult mediationResult) {
+        boolean changed = mediationResultProperty.get() == null || !mediationResultProperty.get().equals(mediationResult);
+        mediationResultProperty.set(mediationResult);
         if (changed)
             storage.queueUpForSave();
     }
 
+// TODO: Change for mediation since there is no payout
+/*
     @SuppressWarnings("NullableProblems")
-    public void setDisputePayoutTxId(String disputePayoutTxId) {
-        boolean changed = this.disputePayoutTxId == null || !this.disputePayoutTxId.equals(disputePayoutTxId);
-        this.disputePayoutTxId = disputePayoutTxId;
+    public void setMediationPayoutTxId(String mediationPayoutTxId) {
+        boolean changed = this.mediationPayoutTxId == null || !this.mediationPayoutTxId.equals(mediationPayoutTxId);
+        this.mediationPayoutTxId = mediationPayoutTxId;
         if (changed)
             storage.queueUpForSave();
     }
+*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -301,8 +320,8 @@ public final class Dispute implements NetworkPayload {
         return isClosedProperty;
     }
 
-    public ReadOnlyObjectProperty<DisputeResult> disputeResultProperty() {
-        return disputeResultProperty;
+    public ReadOnlyObjectProperty<MediationResult> mediationResultProperty() {
+        return mediationResultProperty;
     }
 
     public Date getTradeDate() {
@@ -319,32 +338,35 @@ public final class Dispute implements NetworkPayload {
 
     @Override
     public String toString() {
-        return "Dispute{" +
+        return "Mediation{" +
                 "tradeId='" + tradeId + '\'' +
                 ", id='" + id + '\'' +
                 ", traderId=" + traderId +
-                ", disputeOpenerIsBuyer=" + disputeOpenerIsBuyer +
-                ", disputeOpenerIsMaker=" + disputeOpenerIsMaker +
+                ", mediationOpenerIsBuyer=" + mediationOpenerIsBuyer +
+                ", mediationOpenerIsMaker=" + mediationOpenerIsMaker +
                 ", openingDate=" + openingDate +
                 ", traderPubKeyRing=" + traderPubKeyRing +
                 ", tradeDate=" + tradeDate +
                 ", contract=" + contract +
                 ", contractHash=" + Utilities.bytesAsHexString(contractHash) +
-                ", depositTxSerialized=" + Utilities.bytesAsHexString(depositTxSerialized) +
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//                ", depositTxSerialized=" + Utilities.bytesAsHexString(depositTxSerialized) +
                 ", payoutTxSerialized not displayed for privacy reasons..." +
                 ", depositTxId='" + depositTxId + '\'' +
-                ", payoutTxId='" + payoutTxId + '\'' +
+// TODO: Change to alternative since there is no automatic payout with Mediation
+//                ", payoutTxId='" + payoutTxId + '\'' +
                 ", contractAsJson='" + contractAsJson + '\'' +
                 ", makerContractSignature='" + makerContractSignature + '\'' +
                 ", takerContractSignature='" + takerContractSignature + '\'' +
                 ", mediatorPubKeyRing=" + mediatorPubKeyRing +
                 ", isSupportTicket=" + isSupportTicket +
-                ", disputeCommunicationMessages=" + disputeCommunicationMessages +
+                ", mediationCommunicationMessages=" + mediationCommunicationMessages +
                 ", isClosed=" + isClosedProperty.get() +
-                ", disputeResult=" + disputeResultProperty.get() +
-                ", disputePayoutTxId='" + disputePayoutTxId + '\'' +
+                ", mediationResult=" + mediationResultProperty.get() +
+// TODO: Change for mediation since there is no payout
+//                ", mediationPayoutTxId='" + mediationPayoutTxId + '\'' +
                 ", isClosedProperty=" + isClosedProperty +
-                ", disputeResultProperty=" + disputeResultProperty +
+                ", mediationResultProperty=" + mediationResultProperty +
                 '}';
     }
 }

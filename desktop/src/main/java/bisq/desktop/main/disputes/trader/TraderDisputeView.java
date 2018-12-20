@@ -27,7 +27,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TableGroupHeadline;
-import bisq.desktop.main.disputes.arbitrator.ArbitratorDisputeView;
+import bisq.desktop.main.disputes.mediator.MediatorDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
@@ -37,10 +37,10 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.arbitration.Attachment;
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
-import bisq.core.arbitration.messages.DisputeCommunicationMessage;
+import bisq.core.disputes.Attachment;
+import bisq.core.disputes.Mediation;
+import bisq.core.disputes.MediationManager;
+import bisq.core.disputes.messages.MediationCommunicationMessage;
 import bisq.core.locale.Res;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
@@ -136,11 +136,11 @@ import javax.annotation.Nullable;
 @FxmlView
 public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
-    private final DisputeManager disputeManager;
+    private final MediationManager mediationManager;
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
     protected final BSFormatter formatter;
-    private final DisputeSummaryWindow disputeSummaryWindow;
+    private final DisputeSummaryWindow mediationSummaryWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
@@ -149,11 +149,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final List<Attachment> tempAttachments = new ArrayList<>();
     private final boolean useDevPrivilegeKeys;
 
-    private TableView<Dispute> tableView;
-    private SortedList<Dispute> sortedList;
+    private TableView<Mediation> tableView;
+    private SortedList<Mediation> sortedList;
 
-    private Dispute selectedDispute;
-    private ListView<DisputeCommunicationMessage> messageListView;
+    private Mediation selectedMediation;
+    private ListView<MediationCommunicationMessage> messageListView;
     private TextArea inputTextArea;
     private AnchorPane messagesAnchorPane;
     private VBox messagesInputBox;
@@ -162,17 +162,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private ChangeListener<Boolean> storedInMailboxPropertyListener, arrivedPropertyListener;
     private ChangeListener<String> sendMessageErrorPropertyListener;
     @Nullable
-    private DisputeCommunicationMessage disputeCommunicationMessage;
-    private ListChangeListener<DisputeCommunicationMessage> disputeDirectMessageListListener;
-    private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
-    private Subscription selectedDisputeSubscription;
+    private MediationCommunicationMessage mediationCommunicationMessage;
+    private ListChangeListener<MediationCommunicationMessage> mediationDirectMessageListListener;
+    private ChangeListener<Boolean> selectedMediationClosedPropertyListener;
+    private Subscription selectedMediationSubscription;
     private TableGroupHeadline tableGroupHeadline;
-    private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages;
+    private ObservableList<MediationCommunicationMessage> mediationCommunicationMessages;
     private Button sendButton;
     private Subscription inputTextAreaTextSubscription;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
-    protected FilteredList<Dispute> filteredList;
+    protected FilteredList<Mediation> filteredList;
     private InputTextField filterTextField;
     private ChangeListener<String> filterTextFieldListener;
     protected HBox filterBox;
@@ -183,21 +183,21 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TraderDisputeView(DisputeManager disputeManager,
+    public TraderDisputeView(MediationManager mediationManager,
                              KeyRing keyRing,
                              TradeManager tradeManager,
                              BSFormatter formatter,
-                             DisputeSummaryWindow disputeSummaryWindow,
+                             DisputeSummaryWindow mediationSummaryWindow,
                              PrivateNotificationManager privateNotificationManager,
                              ContractWindow contractWindow,
                              TradeDetailsWindow tradeDetailsWindow,
                              P2PService p2PService,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        this.disputeManager = disputeManager;
+        this.mediationManager = mediationManager;
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
         this.formatter = formatter;
-        this.disputeSummaryWindow = disputeSummaryWindow;
+        this.mediationSummaryWindow = mediationSummaryWindow;
         this.privateNotificationManager = privateNotificationManager;
         this.contractWindow = contractWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
@@ -234,33 +234,33 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
         tableView.getColumns().add(getSelectColumn());
 
-        TableColumn<Dispute, Dispute> contractColumn = getContractColumn();
+        TableColumn<Mediation, Mediation> contractColumn = getContractColumn();
         tableView.getColumns().add(contractColumn);
 
-        TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
+        TableColumn<Mediation, Mediation> dateColumn = getDateColumn();
         tableView.getColumns().add(dateColumn);
 
-        TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
+        TableColumn<Mediation, Mediation> tradeIdColumn = getTradeIdColumn();
         tableView.getColumns().add(tradeIdColumn);
 
-        TableColumn<Dispute, Dispute> buyerOnionAddressColumn = getBuyerOnionAddressColumn();
+        TableColumn<Mediation, Mediation> buyerOnionAddressColumn = getBuyerOnionAddressColumn();
         tableView.getColumns().add(buyerOnionAddressColumn);
 
-        TableColumn<Dispute, Dispute> sellerOnionAddressColumn = getSellerOnionAddressColumn();
+        TableColumn<Mediation, Mediation> sellerOnionAddressColumn = getSellerOnionAddressColumn();
         tableView.getColumns().add(sellerOnionAddressColumn);
 
 
-        TableColumn<Dispute, Dispute> marketColumn = getMarketColumn();
+        TableColumn<Mediation, Mediation> marketColumn = getMarketColumn();
         tableView.getColumns().add(marketColumn);
 
-        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
+        TableColumn<Mediation, Mediation> roleColumn = getRoleColumn();
         tableView.getColumns().add(roleColumn);
 
-        TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
+        TableColumn<Mediation, Mediation> stateColumn = getStateColumn();
         tableView.getColumns().add(stateColumn);
 
-        tradeIdColumn.setComparator(Comparator.comparing(Dispute::getTradeId));
-        dateColumn.setComparator(Comparator.comparing(Dispute::getOpeningDate));
+        tradeIdColumn.setComparator(Comparator.comparing(Mediation::getTradeId));
+        dateColumn.setComparator(Comparator.comparing(Mediation::getOpeningDate));
         buyerOnionAddressColumn.setComparator(Comparator.comparing(this::getBuyerOnionAddressColumnLabel));
         sellerOnionAddressColumn.setComparator(Comparator.comparing(this::getSellerOnionAddressColumnLabel));
         marketColumn.setComparator((o1, o2) -> formatter.getCurrencyPair(o1.getContract().getOfferPayload().getCurrencyCode()).compareTo(o2.getContract().getOfferPayload().getCurrencyCode()));
@@ -271,63 +271,63 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         /*inputTextAreaListener = (observable, oldValue, newValue) ->
                 sendButton.setDisable(newValue.length() == 0
                         && tempAttachments.size() == 0 &&
-                        selectedDispute.disputeResultProperty().get() == null);*/
+                        selectedMediation.mediationResultProperty().get() == null);*/
 
-        selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> {
+        selectedMediationClosedPropertyListener = (observable, oldValue, newValue) -> {
             messagesInputBox.setVisible(!newValue);
             messagesInputBox.setManaged(!newValue);
             AnchorPane.setBottomAnchor(messageListView, newValue ? 0d : 120d);
         };
 
-        disputeDirectMessageListListener = c -> scrollToBottom();
+        mediationDirectMessageListListener = c -> scrollToBottom();
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.L, event)) {
-                Map<String, List<Dispute>> map = new HashMap<>();
-                disputeManager.getDisputesAsObservableList().forEach(dispute -> {
-                    String tradeId = dispute.getTradeId();
-                    List<Dispute> list;
+                Map<String, List<Mediation>> map = new HashMap<>();
+                mediationManager.getMediationsAsObservableList().forEach(mediation -> {
+                    String tradeId = mediation.getTradeId();
+                    List<Mediation> list;
                     if (!map.containsKey(tradeId))
                         map.put(tradeId, new ArrayList<>());
 
                     list = map.get(tradeId);
-                    list.add(dispute);
+                    list.add(mediation);
                 });
-                List<List<Dispute>> disputeGroups = new ArrayList<>();
-                map.forEach((key, value) -> disputeGroups.add(value));
-                disputeGroups.sort((o1, o2) -> !o1.isEmpty() && !o2.isEmpty() ? o1.get(0).getOpeningDate().compareTo(o2.get(0).getOpeningDate()) : 0);
+                List<List<Mediation>> mediationGroups = new ArrayList<>();
+                map.forEach((key, value) -> mediationGroups.add(value));
+                mediationGroups.sort((o1, o2) -> !o1.isEmpty() && !o2.isEmpty() ? o1.get(0).getOpeningDate().compareTo(o2.get(0).getOpeningDate()) : 0);
                 StringBuilder stringBuilder = new StringBuilder();
 
                 // We don't translate that as it is not intended for the public
-                stringBuilder.append("Summary of all disputes (No. of disputes: ").append(disputeGroups.size()).append(")\n\n");
-                disputeGroups.forEach(disputeGroup -> {
-                    Dispute dispute0 = disputeGroup.get(0);
+                stringBuilder.append("Summary of all mediations (No. of mediations: ").append(mediationGroups.size()).append(")\n\n");
+                mediationGroups.forEach(mediationGroup -> {
+                    Mediation mediation0 = mediationGroup.get(0);
                     stringBuilder.append("##########################################################################################/\n")
                             .append("## Trade ID: ")
-                            .append(dispute0.getTradeId())
+                            .append(mediation0.getTradeId())
                             .append("\n")
                             .append("## Date: ")
-                            .append(formatter.formatDateTime(dispute0.getOpeningDate()))
+                            .append(formatter.formatDateTime(mediation0.getOpeningDate()))
                             .append("\n")
                             .append("## Is support ticket: ")
-                            .append(dispute0.isSupportTicket())
+                            .append(mediation0.isSupportTicket())
                             .append("\n");
-                    if (dispute0.disputeResultProperty().get() != null && dispute0.disputeResultProperty().get().getReason() != null) {
+                    if (mediation0.mediationResultProperty().get() != null && mediation0.mediationResultProperty().get().getReason() != null) {
                         stringBuilder.append("## Reason: ")
-                                .append(dispute0.disputeResultProperty().get().getReason())
+                                .append(mediation0.mediationResultProperty().get().getReason())
                                 .append("\n");
                     }
                     stringBuilder.append("##########################################################################################/\n")
                             .append("\n");
-                    disputeGroup.forEach(dispute -> {
+                    mediationGroup.forEach(mediation -> {
                         stringBuilder
                                 .append("*******************************************************************************************\n")
                                 .append("** Trader's ID: ")
-                                .append(dispute.getTraderId())
+                                .append(mediation.getTraderId())
                                 .append("\n*******************************************************************************************\n")
                                 .append("\n");
-                        dispute.getDisputeCommunicationMessages().forEach(m -> {
-                            String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
+                        mediation.getMediationCommunicationMessages().forEach(m -> {
+                            String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Mediator's msg: ";
                             stringBuilder.append(role)
                                     .append(m.getMessage())
                                     .append("\n");
@@ -338,34 +338,34 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 });
                 String message = stringBuilder.toString();
                 // We don't translate that as it is not intended for the public
-                new Popup<>().headLine("All disputes (" + disputeGroups.size() + ")")
+                new Popup<>().headLine("All mediations (" + mediationGroups.size() + ")")
                         .information(message)
                         .width(1000)
                         .actionButtonText("Copy")
                         .onAction(() -> Utilities.copyToClipboard(message))
                         .show();
             } else if (Utilities.isAltOrCtrlPressed(KeyCode.U, event)) {
-                // Hidden shortcut to re-open a dispute. Allow it also for traders not only arbitrator.
-                if (selectedDispute != null) {
-                    if (selectedDisputeClosedPropertyListener != null)
-                        selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
-                    selectedDispute.setIsClosed(false);
+                // Hidden shortcut to re-open a mediation. Allow it also for traders not only arbitrator.
+                if (selectedMediation != null) {
+                    if (selectedMediationClosedPropertyListener != null)
+                        selectedMediation.isClosedProperty().removeListener(selectedMediationClosedPropertyListener);
+                    selectedMediation.setIsClosed(false);
                 }
             } else if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
-                if (selectedDispute != null) {
-                    PubKeyRing pubKeyRing = selectedDispute.getTraderPubKeyRing();
+                if (selectedMediation != null) {
+                    PubKeyRing pubKeyRing = selectedMediation.getTraderPubKeyRing();
                     NodeAddress nodeAddress;
-                    if (pubKeyRing.equals(selectedDispute.getContract().getBuyerPubKeyRing()))
-                        nodeAddress = selectedDispute.getContract().getBuyerNodeAddress();
+                    if (pubKeyRing.equals(selectedMediation.getContract().getBuyerPubKeyRing()))
+                        nodeAddress = selectedMediation.getContract().getBuyerNodeAddress();
                     else
-                        nodeAddress = selectedDispute.getContract().getSellerNodeAddress();
+                        nodeAddress = selectedMediation.getContract().getSellerNodeAddress();
 
                     new SendPrivateNotificationWindow(pubKeyRing, nodeAddress, useDevPrivilegeKeys)
                             .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                             .show();
                 }
             } else if (Utilities.isAltOrCtrlPressed(KeyCode.ENTER, event)) {
-                if (selectedDispute != null && messagesInputBox.isVisible() && inputTextArea.isFocused())
+                if (selectedMediation != null && messagesInputBox.isVisible() && inputTextArea.isFocused())
                     onTrySendMessage();
             }
         };
@@ -374,9 +374,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     @Override
     protected void activate() {
         filterTextField.textProperty().addListener(filterTextFieldListener);
-        disputeManager.cleanupDisputes();
+        mediationManager.cleanupMediations();
 
-        filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
+        filteredList = new FilteredList<>(mediationManager.getMediationsAsObservableList());
         applyFilteredListPredicate(filterTextField.getText());
 
         sortedList = new SortedList<>(filteredList);
@@ -384,9 +384,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         tableView.setItems(sortedList);
 
         // sortedList.setComparator((o1, o2) -> o2.getOpeningDate().compareTo(o1.getOpeningDate()));
-        selectedDisputeSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectDispute);
+        selectedMediationSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectMediation);
 
-        Dispute selectedItem = tableView.getSelectionModel().getSelectedItem();
+        Mediation selectedItem = tableView.getSelectionModel().getSelectedItem();
         if (selectedItem != null)
             tableView.getSelectionModel().select(selectedItem);
 
@@ -410,28 +410,28 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 Date startDate = formatter.parse("10/02/17");
                 startDate = new Date(0); // print all from start
 
-                HashMap<String, Dispute> map = new HashMap<>();
-                disputeManager.getDisputesAsObservableList().forEach(dispute -> map.put(dispute.getDepositTxId(), dispute));
+                HashMap<String, Mediation> map = new HashMap<>();
+                mediationManager.getMediationsAsObservableList().forEach(mediation -> map.put(mediation.getDepositTxId(), mediation));
 
                 final Date finalStartDate = startDate;
-                List<Dispute> disputes = new ArrayList<>(map.values());
-                disputes.sort(Comparator.comparing(Dispute::getOpeningDate));
-                List<List<Dispute>> subLists = Lists.partition(disputes, 1000);
+                List<Mediation> mediations = new ArrayList<>(map.values());
+                mediations.sort(Comparator.comparing(Mediation::getOpeningDate));
+                List<List<Mediation>> subLists = Lists.partition(mediations, 1000);
                 StringBuilder sb = new StringBuilder();
                 // We don't translate that as it is not intended for the public
                 subLists.forEach(list -> {
                     StringBuilder sb1 = new StringBuilder("\n<html><head><script type=\"text/javascript\">function load(){\n");
                     StringBuilder sb2 = new StringBuilder("\n}</script></head><body onload=\"load()\">\n");
-                    list.forEach(dispute -> {
-                        if (dispute.getOpeningDate().after(finalStartDate)) {
-                            String txId = dispute.getDepositTxId();
+                    list.forEach(mediation -> {
+                        if (mediation.getOpeningDate().after(finalStartDate)) {
+                            String txId = mediation.getDepositTxId();
                             sb1.append("window.open(\"https://blockchain.info/tx/").append(txId).append("\", '_blank');\n");
 
-                            sb2.append("Dispute ID: ").append(dispute.getId()).
+                            sb2.append("Mediation ID: ").append(mediation.getId()).
                                     append(" Tx ID: ").
                                     append("<a href=\"https://blockchain.info/tx/").append(txId).append("\">").
                                     append(txId).append("</a> ").
-                                    append("Opening date: ").append(formatter.format(dispute.getOpeningDate())).append("<br/>\n");
+                                    append("Opening date: ").append(formatter.format(mediation.getOpeningDate())).append("<br/>\n");
                         }
                     });
                     sb2.append("</body></html>");
@@ -450,16 +450,16 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         filterTextField.textProperty().removeListener(filterTextFieldListener);
         sortedList.comparatorProperty().unbind();
-        selectedDisputeSubscription.unsubscribe();
-        removeListenersOnSelectDispute();
+        selectedMediationSubscription.unsubscribe();
+        removeListenersOnSelectMediation();
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     protected void applyFilteredListPredicate(String filterString) {
-        // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)
-        filteredList.setPredicate(dispute -> !dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()));
+        // If in trader view we must not display arbitrators own mediations as trader (must not happen anyway)
+        filteredList.setPredicate(mediation -> !mediation.getMediatorPubKeyRing().equals(keyRing.getPubKeyRing()));
     }
 
 
@@ -467,8 +467,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onOpenContract(Dispute dispute) {
-        contractWindow.show(dispute);
+    private void onOpenContract(Mediation mediation) {
+        contractWindow.show(mediation);
     }
 
     private void onTrySendMessage() {
@@ -476,7 +476,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             String text = inputTextArea.getText();
             if (!text.isEmpty()) {
                 if (text.length() < 5_000) {
-                    onSendMessage(text, selectedDispute);
+                    onSendMessage(text, selectedMediation);
                 } else {
                     new Popup<>().information(Res.get("popup.warning.messageTooLong")).show();
                 }
@@ -486,14 +486,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void onSendMessage(String inputText, Dispute dispute) {
-        if (disputeCommunicationMessage != null) {
-            disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
-            disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
-            disputeCommunicationMessage.sendMessageErrorProperty().removeListener(sendMessageErrorPropertyListener);
+    private void onSendMessage(String inputText, Mediation mediation) {
+        if (mediationCommunicationMessage != null) {
+            mediationCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+            mediationCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+            mediationCommunicationMessage.sendMessageErrorProperty().removeListener(sendMessageErrorPropertyListener);
         }
 
-        disputeCommunicationMessage = disputeManager.sendDisputeDirectMessage(dispute, inputText, new ArrayList<>(tempAttachments));
+        mediationCommunicationMessage = mediationManager.sendMediationDirectMessage(mediation, inputText, new ArrayList<>(tempAttachments));
         tempAttachments.clear();
         scrollToBottom();
 
@@ -529,10 +529,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 hideSendMsgInfo(timer);
             }
         };
-        if (disputeCommunicationMessage != null) {
-            disputeCommunicationMessage.arrivedProperty().addListener(arrivedPropertyListener);
-            disputeCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
-            disputeCommunicationMessage.sendMessageErrorProperty().addListener(sendMessageErrorPropertyListener);
+        if (mediationCommunicationMessage != null) {
+            mediationCommunicationMessage.arrivedProperty().addListener(arrivedPropertyListener);
+            mediationCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
+            mediationCommunicationMessage.sendMessageErrorProperty().addListener(sendMessageErrorPropertyListener);
         }
     }
 
@@ -547,11 +547,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         sendMsgBusyAnimation.stop();
     }
 
-    private void onCloseDispute(Dispute dispute) {
-        long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
+    private void onCloseMediation(Mediation mediation) {
+        long protocolVersion = mediation.getContract().getOfferPayload().getProtocolVersion();
         if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
-            disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
-                    .show(dispute);
+            mediationSummaryWindow.onFinalizeMediation(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
+                    .show(mediation);
         } else {
             new Popup<>()
                     .warning(Res.get("support.wrongVersion", protocolVersion))
@@ -615,20 +615,20 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void removeListenersOnSelectDispute() {
-        if (selectedDispute != null) {
-            if (selectedDisputeClosedPropertyListener != null)
-                selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
+    private void removeListenersOnSelectMediation() {
+        if (selectedMediation != null) {
+            if (selectedMediationClosedPropertyListener != null)
+                selectedMediation.isClosedProperty().removeListener(selectedMediationClosedPropertyListener);
 
-            if (disputeCommunicationMessages != null && disputeDirectMessageListListener != null)
-                disputeCommunicationMessages.removeListener(disputeDirectMessageListListener);
+            if (mediationCommunicationMessages != null && mediationDirectMessageListListener != null)
+                mediationCommunicationMessages.removeListener(mediationDirectMessageListListener);
         }
 
-        if (disputeCommunicationMessage != null) {
+        if (mediationCommunicationMessage != null) {
             if (arrivedPropertyListener != null)
-                disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+                mediationCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
             if (storedInMailboxPropertyListener != null)
-                disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+                mediationCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
         }
 
         if (messageListView != null)
@@ -644,29 +644,29 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             inputTextAreaTextSubscription.unsubscribe();
     }
 
-    private void addListenersOnSelectDispute() {
+    private void addListenersOnSelectMediation() {
         if (tableGroupHeadline != null) {
             tableGroupHeadline.prefWidthProperty().bind(root.widthProperty());
             messageListView.prefWidthProperty().bind(root.widthProperty());
             messagesAnchorPane.prefWidthProperty().bind(root.widthProperty());
-            disputeCommunicationMessages.addListener(disputeDirectMessageListListener);
-            if (selectedDispute != null)
-                selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
+            mediationCommunicationMessages.addListener(mediationDirectMessageListListener);
+            if (selectedMediation != null)
+                selectedMediation.isClosedProperty().addListener(selectedMediationClosedPropertyListener);
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
         }
     }
 
-    private void onSelectDispute(Dispute dispute) {
-        removeListenersOnSelectDispute();
-        if (dispute == null) {
+    private void onSelectMediation(Mediation mediation) {
+        removeListenersOnSelectMediation();
+        if (mediation == null) {
             if (root.getChildren().size() > 2)
                 root.getChildren().remove(2);
 
-            selectedDispute = null;
-        } else if (selectedDispute != dispute) {
-            this.selectedDispute = dispute;
+            selectedMediation = null;
+        } else if (selectedMediation != mediation) {
+            this.selectedMediation = mediation;
 
-            boolean isTrader = disputeManager.isTrader(selectedDispute);
+            boolean isTrader = mediationManager.isTrader(selectedMediation);
 
             tableGroupHeadline = new TableGroupHeadline();
             tableGroupHeadline.setText(Res.get("support.messages"));
@@ -676,8 +676,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             AnchorPane.setBottomAnchor(tableGroupHeadline, 0d);
             AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
-            disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessages();
-            SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
+            mediationCommunicationMessages = selectedMediation.getMediationCommunicationMessages();
+            SortedList<MediationCommunicationMessage> sortedList = new SortedList<>(mediationCommunicationMessages);
             sortedList.setComparator(Comparator.comparing(o -> new Date(o.getDate())));
             messageListView = new ListView<>(sortedList);
             messageListView.setId("message-list-view");
@@ -693,7 +693,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             inputTextArea = new BisqTextArea();
             inputTextArea.setPrefHeight(70);
             inputTextArea.setWrapText(true);
-            if (!(this instanceof ArbitratorDisputeView))
+            if (!(this instanceof MediatorMediationView))
                 inputTextArea.setPromptText(Res.get("support.input.prompt"));
 
             sendButton = new AutoTooltipButton(Res.get("support.send"));
@@ -711,18 +711,18 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
             sendMsgBusyAnimation = new BusyAnimation(false);
 
-            if (!selectedDispute.isClosed()) {
+            if (!selectedMediation.isClosed()) {
                 HBox buttonBox = new HBox();
                 buttonBox.setSpacing(10);
                 buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
                 if (!isTrader) {
-                    Button closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
-                    closeDisputeButton.setOnAction(e -> onCloseDispute(selectedDispute));
-                    closeDisputeButton.setDefaultButton(true);
+                    Button closeMediationButton = new AutoTooltipButton(Res.get("support.closeTicket"));
+                    closeMediationButton.setOnAction(e -> onCloseMediation(selectedMediation));
+                    closeMediationButton.setDefaultButton(true);
                     Pane spacer = new Pane();
                     HBox.setHgrow(spacer, Priority.ALWAYS);
-                    buttonBox.getChildren().addAll(spacer, closeDisputeButton);
+                    buttonBox.getChildren().addAll(spacer, closeMediationButton);
                 }
 
                 messagesInputBox = new VBox();
@@ -744,7 +744,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
             messageListView.setCellFactory(new Callback<>() {
                 @Override
-                public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
+                public ListCell<MediationCommunicationMessage> call(ListView<MediationCommunicationMessage> list) {
                     return new ListCell<>() {
                         ChangeListener<Boolean> sendMsgBusyAnimationListener;
                         final Pane bg = new Pane();
@@ -779,7 +779,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         }
 
                         @Override
-                        public void updateItem(final DisputeCommunicationMessage message, boolean empty) {
+                        public void updateItem(final MediationCommunicationMessage message, boolean empty) {
                             super.updateItem(message, empty);
                             if (message != null && !empty) {
                                 copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(messageLabel.getText()));
@@ -923,7 +923,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                 // Need to set it here otherwise style is not correct
                                 AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY, "16.0");
-                                copyIcon.getStyleClass().addAll("icon", "copy-icon-disputes");
+                                copyIcon.getStyleClass().addAll("icon", "copy-icon-mediations");
 
                                 // TODO There are still some cell rendering issues on updates
                                 setGraphic(messageAnchorPane);
@@ -947,7 +947,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             }
                         }
 
-                        private void updateMsgState(DisputeCommunicationMessage message) {
+                        private void updateMsgState(MediationCommunicationMessage message) {
                             boolean visible;
                             AwesomeIcon icon = null;
                             String text = null;
@@ -1000,7 +1000,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             scrollToBottom();
         }
 
-        addListenersOnSelectDispute();
+        addListenersOnSelectMediation();
     }
 
 
@@ -1008,8 +1008,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     // Table
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private TableColumn<Dispute, Dispute> getSelectColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.select"));
+    private TableColumn<Mediation, Mediation> getSelectColumn() {
+        TableColumn<Mediation, Mediation> column = new AutoTooltipTableColumn<>(Res.get("shared.select"));
         column.setMinWidth(80);
         column.setMaxWidth(80);
         column.setSortable(false);
@@ -1021,14 +1021,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 new Callback<>() {
 
                     @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute,
-                            Dispute> column) {
+                    public TableCell<Mediation, Mediation> call(TableColumn<Mediation,
+                            Mediation> column) {
                         return new TableCell<>() {
 
                             Button button;
 
                             @Override
-                            public void updateItem(final Dispute item, boolean empty) {
+                            public void updateItem(final Mediation item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
@@ -1051,24 +1051,24 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
-    private TableColumn<Dispute, Dispute> getContractColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.details")) {
+    private TableColumn<Mediation, Mediation> getContractColumn() {
+        TableColumn<Mediation, Mediation> column = new AutoTooltipTableColumn<>(Res.get("shared.details")) {
             {
                 setMinWidth(80);
                 setSortable(false);
             }
         };
-        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellValueFactory((mediation) -> new ReadOnlyObjectWrapper<>(mediation.getValue()));
         column.setCellFactory(
                 new Callback<>() {
 
                     @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                    public TableCell<Mediation, Mediation> call(TableColumn<Mediation, Mediation> column) {
                         return new TableCell<>() {
                             Button button;
 
                             @Override
-                            public void updateItem(final Dispute item, boolean empty) {
+                            public void updateItem(final Mediation item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
@@ -1091,20 +1091,20 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
-    private TableColumn<Dispute, Dispute> getDateColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.date")) {
+    private TableColumn<Mediation, Mediation> getDateColumn() {
+        TableColumn<Mediation, Mediation> column = new AutoTooltipTableColumn<>(Res.get("shared.date")) {
             {
                 setMinWidth(180);
             }
         };
-        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellValueFactory((mediation) -> new ReadOnlyObjectWrapper<>(mediation.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                    public TableCell<Mediation, Mediation> call(TableColumn<Mediation, Mediation> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final Dispute item, boolean empty) {
+                            public void updateItem(final Mediation item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
                                     setText(formatter.formatDateTime(item.getOpeningDate()));
@@ -1117,22 +1117,22 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
-    private TableColumn<Dispute, Dispute> getTradeIdColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.tradeId")) {
+    private TableColumn<Mediation, Mediation> getTradeIdColumn() {
+        TableColumn<Mediation, Mediation> column = new AutoTooltipTableColumn<>(Res.get("shared.tradeId")) {
             {
                 setMinWidth(110);
             }
         };
-        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellValueFactory((mediation) -> new ReadOnlyObjectWrapper<>(mediation.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                    public TableCell<Mediation, Mediation> call(TableColumn<Mediation, Mediation> column) {
                         return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
-                            public void updateItem(final Dispute item, boolean empty) {
+                            public void updateItem(final Mediation item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
@@ -1158,20 +1158,20 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
-    private TableColumn<Dispute, Dispute> getBuyerOnionAddressColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.buyerAddress")) {
+    private TableColumn<Mediation, Mediation> getBuyerOnionAddressColumn() {
+        TableColumn<Mediation, Mediation> column = new AutoTooltipTableColumn<>(Res.get("support.buyerAddress")) {
             {
                 setMinWidth(170);
             }
         };
-        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellValueFactory((mediation) -> new ReadOnlyObjectWrapper<>(mediation.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                    public TableCell<Mediation, Mediation> call(TableColumn<Mediation, Mediation> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final Dispute item, boolean empty) {
+                            public void updateItem(final Mediation item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
                                     setText(getBuyerOnionAddressColumnLabel(item));
@@ -1184,20 +1184,20 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
-    private TableColumn<Dispute, Dispute> getSellerOnionAddressColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.sellerAddress")) {
+    private TableColumn<Mediation, Mediation> getSellerOnionAddressColumn() {
+        TableColumn<Mediation, Mediation> column = new AutoTooltipTableColumn<>(Res.get("support.sellerAddress")) {
             {
                 setMinWidth(170);
             }
         };
-        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellValueFactory((mediation) -> new ReadOnlyObjectWrapper<>(mediation.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                    public TableCell<Mediation, Mediation> call(TableColumn<Mediation, Mediation> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final Dispute item, boolean empty) {
+                            public void updateItem(final Mediation item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
                                     setText(getSellerOnionAddressColumnLabel(item));
@@ -1211,12 +1211,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
 
-    protected String getBuyerOnionAddressColumnLabel(Dispute item) {
+    protected String getBuyerOnionAddressColumnLabel(Mediation item) {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress buyerNodeAddress = contract.getBuyerNodeAddress();
             if (buyerNodeAddress != null)
-                return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + disputeManager.getNrOfDisputes(true, contract) + ")";
+                return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + mediationManager.getNrOfMediations(true, contract) + ")";
             else
                 return Res.get("shared.na");
         } else {
@@ -1224,12 +1224,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    protected String getSellerOnionAddressColumnLabel(Dispute item) {
+    protected String getSellerOnionAddressColumnLabel(Mediation item) {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress sellerNodeAddress = contract.getSellerNodeAddress();
             if (sellerNodeAddress != null)
-                return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + disputeManager.getNrOfDisputes(false, contract) + ")";
+                return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + mediationManager.getNrOfMediations(false, contract) + ")";
             else
                 return Res.get("shared.na");
         } else {
@@ -1237,20 +1237,20 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private TableColumn<Dispute, Dispute> getMarketColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.market")) {
+    private TableColumn<Mediation, Mediation> getMarketColumn() {
+        TableColumn<Mediation, Mediation> column = new AutoTooltipTableColumn<>(Res.get("shared.market")) {
             {
                 setMinWidth(130);
             }
         };
-        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellValueFactory((mediation) -> new ReadOnlyObjectWrapper<>(mediation.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                    public TableCell<Mediation, Mediation> call(TableColumn<Mediation, Mediation> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final Dispute item, boolean empty) {
+                            public void updateItem(final Mediation item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
                                     setText(formatter.getCurrencyPair(item.getContract().getOfferPayload().getCurrencyCode()));
@@ -1263,26 +1263,26 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
-    private TableColumn<Dispute, Dispute> getRoleColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.role")) {
+    private TableColumn<Mediation, Mediation> getRoleColumn() {
+        TableColumn<Mediation, Mediation> column = new AutoTooltipTableColumn<>(Res.get("support.role")) {
             {
                 setMinWidth(130);
             }
         };
-        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellValueFactory((mediation) -> new ReadOnlyObjectWrapper<>(mediation.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                    public TableCell<Mediation, Mediation> call(TableColumn<Mediation, Mediation> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final Dispute item, boolean empty) {
+                            public void updateItem(final Mediation item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    if (item.isDisputeOpenerIsMaker())
-                                        setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerOfferer") : Res.get("support.sellerOfferer"));
+                                    if (item.isMediationOpenerIsMaker())
+                                        setText(item.isMediationOpenerIsBuyer() ? Res.get("support.buyerOfferer") : Res.get("support.sellerOfferer"));
                                     else
-                                        setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerTaker") : Res.get("support.sellerTaker"));
+                                        setText(item.isMediationOpenerIsBuyer() ? Res.get("support.buyerTaker") : Res.get("support.sellerTaker"));
                                 } else {
                                     setText("");
                                 }
@@ -1293,18 +1293,18 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
-    private TableColumn<Dispute, Dispute> getStateColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.state")) {
+    private TableColumn<Mediation, Mediation> getStateColumn() {
+        TableColumn<Mediation, Mediation> column = new AutoTooltipTableColumn<>(Res.get("support.state")) {
             {
                 setMinWidth(50);
             }
         };
         column.getStyleClass().add("last-column");
-        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellValueFactory((mediation) -> new ReadOnlyObjectWrapper<>(mediation.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                    public TableCell<Mediation, Mediation> call(TableColumn<Mediation, Mediation> column) {
                         return new TableCell<>() {
 
 
@@ -1312,7 +1312,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             ChangeListener<Boolean> listener;
 
                             @Override
-                            public void updateItem(final Dispute item, boolean empty) {
+                            public void updateItem(final Mediation item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     listener = (observable, oldValue, newValue) -> {

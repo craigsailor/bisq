@@ -20,6 +20,7 @@ package bisq.core.trade;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.disputes.Mediator;
+import bisq.core.disputes.MediatorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
@@ -224,6 +225,21 @@ public abstract class Trade implements Tradable, Model {
         }
     }
 
+    public enum MediationState {
+        NO_MEDIATION,
+        MEDIATION_REQUESTED,
+        MEDIATION_STARTED_BY_PEER,
+        MEDIATION_CLOSED;
+
+        public static Trade.MediationState fromProto(PB.Trade.MediationState mediationState) {
+            return ProtoUtil.enumFromProto(Trade.MediationState.class, mediationState.name());
+        }
+
+        public static PB.Trade.MediationState toProtoMessage(Trade.MediationState mediationState) {
+            return PB.Trade.MediationState.valueOf(mediationState.name());
+        }
+    }
+
     public enum TradePeriodState {
         FIRST_HALF,
         SECOND_HALF,
@@ -285,6 +301,8 @@ public abstract class Trade implements Tradable, Model {
     private State state = State.PREPARATION;
     @Getter
     private DisputeState disputeState = DisputeState.NO_DISPUTE;
+    @Getter
+    private MediationState mediationState = MediationState.NO_MEDIATION;
     @Getter
     private TradePeriodState tradePeriodState = TradePeriodState.FIRST_HALF;
     @Nullable
@@ -349,6 +367,7 @@ public abstract class Trade implements Tradable, Model {
     transient final private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(state);
     transient final private ObjectProperty<Phase> statePhaseProperty = new SimpleObjectProperty<>(state.phase);
     transient final private ObjectProperty<DisputeState> disputeStateProperty = new SimpleObjectProperty<>(disputeState);
+    transient final private ObjectProperty<MediationState> mediationStateProperty = new SimpleObjectProperty<>(mediationState);
     transient final private ObjectProperty<TradePeriodState> tradePeriodStateProperty = new SimpleObjectProperty<>(tradePeriodState);
     transient final private StringProperty errorMessageProperty = new SimpleStringProperty();
 
@@ -647,6 +666,14 @@ public abstract class Trade implements Tradable, Model {
             persist();
     }
 
+    public void setMediationState(MediationState mediationState) {
+        Log.traceCall("mediationState=" + mediationState + "\n\ttrade=" + this);
+        boolean changed = this.mediationState != mediationState;
+        this.mediationState = mediationState;
+        mediationStateProperty.set(mediationState);
+        if (changed)
+            persist();
+    }
 
     public void setTradePeriodState(TradePeriodState tradePeriodState) {
         boolean changed = this.tradePeriodState != tradePeriodState;

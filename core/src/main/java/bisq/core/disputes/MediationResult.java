@@ -17,7 +17,7 @@
 
 package bisq.core.disputes;
 
-import bisq.core.disputes.messages.DisputeCommunicationMessage;
+import bisq.core.disputes.messages.MediationCommunicationMessage;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 @Getter
 @Slf4j
-public final class DisputeResult implements NetworkPayload {
+public final class MediationResult implements NetworkPayload {
 
     public enum Winner {
         BUYER,
@@ -76,7 +76,7 @@ public final class DisputeResult implements NetworkPayload {
     private final StringProperty summaryNotesProperty = new SimpleStringProperty("");
     @Setter
     @Nullable
-    private DisputeCommunicationMessage disputeCommunicationMessage;
+    private MediationCommunicationMessage mediationCommunicationMessage;
     @Setter
     @Nullable
     private byte[] mediatorSignature;
@@ -89,12 +89,12 @@ public final class DisputeResult implements NetworkPayload {
     @Setter
     private boolean isLoserPublisher;
 
-    public DisputeResult(String tradeId, int traderId) {
+    public MediationResult(String tradeId, int traderId) {
         this.tradeId = tradeId;
         this.traderId = traderId;
     }
 
-    public DisputeResult(String tradeId,
+    public MediationResult(String tradeId,
                          int traderId,
                          @Nullable Winner winner,
                          int reasonOrdinal,
@@ -102,7 +102,7 @@ public final class DisputeResult implements NetworkPayload {
                          boolean idVerification,
                          boolean screenCast,
                          String summaryNotes,
-                         @Nullable DisputeCommunicationMessage disputeCommunicationMessage,
+                         @Nullable MediationCommunicationMessage mediationCommunicationMessage,
                          @Nullable byte[] mediatorSignature,
                          long buyerPayoutAmount,
                          long sellerPayoutAmount,
@@ -117,7 +117,7 @@ public final class DisputeResult implements NetworkPayload {
         this.idVerificationProperty.set(idVerification);
         this.screenCastProperty.set(screenCast);
         this.summaryNotesProperty.set(summaryNotes);
-        this.disputeCommunicationMessage = disputeCommunicationMessage;
+        this.mediationCommunicationMessage = mediationCommunicationMessage;
         this.mediatorSignature = mediatorSignature;
         this.buyerPayoutAmount = buyerPayoutAmount;
         this.sellerPayoutAmount = sellerPayoutAmount;
@@ -131,16 +131,16 @@ public final class DisputeResult implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static DisputeResult fromProto(PB.DisputeResult proto) {
-        return new DisputeResult(proto.getTradeId(),
+    public static MediationResult fromProto(PB.MediationResult proto) {
+        return new MediationResult(proto.getTradeId(),
                 proto.getTraderId(),
-                ProtoUtil.enumFromProto(DisputeResult.Winner.class, proto.getWinner().name()),
+                ProtoUtil.enumFromProto(MediationResult.Winner.class, proto.getWinner().name()),
                 proto.getReasonOrdinal(),
                 proto.getTamperProofEvidence(),
                 proto.getIdVerification(),
                 proto.getScreenCast(),
                 proto.getSummaryNotes(),
-                proto.getDisputeCommunicationMessage() == null ? null : DisputeCommunicationMessage.fromPayloadProto(proto.getDisputeCommunicationMessage()),
+                proto.getMediationCommunicationMessage() == null ? null : MediationCommunicationMessage.fromPayloadProto(proto.getMediationCommunicationMessage()),
                 proto.getMediatorSignature().toByteArray(),
                 proto.getBuyerPayoutAmount(),
                 proto.getSellerPayoutAmount(),
@@ -150,8 +150,8 @@ public final class DisputeResult implements NetworkPayload {
     }
 
     @Override
-    public PB.DisputeResult toProtoMessage() {
-        final PB.DisputeResult.Builder builder = PB.DisputeResult.newBuilder()
+    public PB.MediationResult toProtoMessage() {
+        final PB.MediationResult.Builder builder = PB.MediationResult.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
                 .setReasonOrdinal(reasonOrdinal)
@@ -166,9 +166,9 @@ public final class DisputeResult implements NetworkPayload {
 
         Optional.ofNullable(mediatorSignature).ifPresent(mediatorSignature -> builder.setMediatorSignature(ByteString.copyFrom(mediatorSignature)));
         Optional.ofNullable(mediatorPubKey).ifPresent(mediatorPubKey -> builder.setMediatorPubKey(ByteString.copyFrom(mediatorPubKey)));
-        Optional.ofNullable(winner).ifPresent(result -> builder.setWinner(PB.DisputeResult.Winner.valueOf(winner.name())));
-        Optional.ofNullable(disputeCommunicationMessage).ifPresent(disputeCommunicationMessage ->
-                builder.setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage()));
+        Optional.ofNullable(winner).ifPresent(result -> builder.setWinner(PB.MediationResult.Winner.valueOf(winner.name())));
+        Optional.ofNullable(mediationCommunicationMessage).ifPresent(mediationCommunicationMessage ->
+                builder.setMediationCommunicationMessage(mediationCommunicationMessage.toProtoNetworkEnvelope().getMediationCommunicationMessage()));
 
         return builder.build();
     }
@@ -235,7 +235,7 @@ public final class DisputeResult implements NetworkPayload {
 
     @Override
     public String toString() {
-        return "DisputeResult{" +
+        return "MediationResult{" +
                 "\n     tradeId='" + tradeId + '\'' +
                 ",\n     traderId=" + traderId +
                 ",\n     winner=" + winner +
@@ -244,7 +244,7 @@ public final class DisputeResult implements NetworkPayload {
                 ",\n     idVerificationProperty=" + idVerificationProperty +
                 ",\n     screenCastProperty=" + screenCastProperty +
                 ",\n     summaryNotesProperty=" + summaryNotesProperty +
-                ",\n     disputeCommunicationMessage=" + disputeCommunicationMessage +
+                ",\n     mediationCommunicationMessage=" + mediationCommunicationMessage +
                 ",\n     mediatorSignature=" + Utilities.bytesAsHexString(mediatorSignature) +
                 ",\n     buyerPayoutAmount=" + buyerPayoutAmount +
                 ",\n     sellerPayoutAmount=" + sellerPayoutAmount +

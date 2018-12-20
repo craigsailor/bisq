@@ -52,7 +52,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true) // listener is transient and therefore excluded anyway
 @Getter
 @Slf4j
-public final class DisputeCommunicationMessage extends DisputeMessage {
+public final class MediationCommunicationMessage extends MediationMessage {
 
     public interface Listener {
         void onMessageStateChanged();
@@ -76,7 +76,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
 
     transient private WeakReference<Listener> listener;
 
-    public DisputeCommunicationMessage(String tradeId,
+    public MediationCommunicationMessage(String tradeId,
                                        int traderId,
                                        boolean senderIsTrader,
                                        String message,
@@ -102,7 +102,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DisputeCommunicationMessage(String tradeId,
+    private MediationCommunicationMessage(String tradeId,
                                         int traderId,
                                         boolean senderIsTrader,
                                         String message,
@@ -134,7 +134,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.DisputeCommunicationMessage.Builder builder = PB.DisputeCommunicationMessage.newBuilder()
+        PB.MediationCommunicationMessage.Builder builder = PB.MediationCommunicationMessage.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
                 .setSenderIsTrader(senderIsTrader)
@@ -150,12 +150,12 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         Optional.ofNullable(sendMessageErrorProperty.get()).ifPresent(builder::setSendMessageError);
         Optional.ofNullable(ackErrorProperty.get()).ifPresent(builder::setAckError);
         return getNetworkEnvelopeBuilder()
-                .setDisputeCommunicationMessage(builder)
+                .setMediationCommunicationMessage(builder)
                 .build();
     }
 
-    public static DisputeCommunicationMessage fromProto(PB.DisputeCommunicationMessage proto, int messageVersion) {
-        final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+    public static MediationCommunicationMessage fromProto(PB.MediationCommunicationMessage proto, int messageVersion) {
+        final MediationCommunicationMessage mediationCommunicationMessage = new MediationCommunicationMessage(
                 proto.getTradeId(),
                 proto.getTraderId(),
                 proto.getSenderIsTrader(),
@@ -170,11 +170,11 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 proto.getAcknowledged(),
                 proto.getSendMessageError().isEmpty() ? null : proto.getSendMessageError(),
                 proto.getAckError().isEmpty() ? null : proto.getAckError());
-        disputeCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
-        return disputeCommunicationMessage;
+        mediationCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
+        return mediationCommunicationMessage;
     }
 
-    public static DisputeCommunicationMessage fromPayloadProto(PB.DisputeCommunicationMessage proto) {
+    public static MediationCommunicationMessage fromPayloadProto(PB.MediationCommunicationMessage proto) {
         // We have the case that an envelope got wrapped into a payload.
         // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
         // Payloads don't have a message version and are also used for persistence
@@ -257,7 +257,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
 
     @Override
     public String toString() {
-        return "DisputeCommunicationMessage{" +
+        return "MediationCommunicationMessage{" +
                 "\n     tradeId='" + tradeId + '\'' +
                 ",\n     traderId=" + traderId +
                 ",\n     senderIsTrader=" + senderIsTrader +
@@ -268,7 +268,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 ",\n     isSystemMessage=" + isSystemMessage +
                 ",\n     arrivedProperty=" + arrivedProperty +
                 ",\n     storedInMailboxProperty=" + storedInMailboxProperty +
-                ",\n     DisputeCommunicationMessage.uid='" + uid + '\'' +
+                ",\n     MediationCommunicationMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 ",\n     acknowledgedProperty=" + acknowledgedProperty +
                 ",\n     sendMessageErrorProperty=" + sendMessageErrorProperty +

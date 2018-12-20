@@ -17,31 +17,28 @@
 
 package bisq.core.disputes.messages;
 
+import bisq.core.disputes.Mediation;
+import bisq.core.proto.CoreProtoResolver;
+
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
-import bisq.common.util.Utilities;
 
 import io.bisq.generated.protobuffer.PB;
-
-import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public final class PeerPublishedDisputePayoutTxMessage extends DisputeMessage {
-    private final byte[] transaction;
-    private final String tradeId;
+public final class PeerOpenedMediationMessage extends MediationMessage {
+    private final Mediation mediation;
     private final NodeAddress senderNodeAddress;
 
-    public PeerPublishedDisputePayoutTxMessage(byte[] transaction,
-                                               String tradeId,
-                                               NodeAddress senderNodeAddress,
-                                               String uid) {
-        this(transaction,
-                tradeId,
+    public PeerOpenedMediationMessage(Mediation mediation,
+                                    NodeAddress senderNodeAddress,
+                                    String uid) {
+        this(mediation,
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion());
@@ -52,31 +49,27 @@ public final class PeerPublishedDisputePayoutTxMessage extends DisputeMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private PeerPublishedDisputePayoutTxMessage(byte[] transaction,
-                                                String tradeId,
-                                                NodeAddress senderNodeAddress,
-                                                String uid,
-                                                int messageVersion) {
+    private PeerOpenedMediationMessage(Mediation mediation,
+                                     NodeAddress senderNodeAddress,
+                                     String uid,
+                                     int messageVersion) {
         super(messageVersion, uid);
-        this.transaction = transaction;
-        this.tradeId = tradeId;
+        this.mediation = mediation;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setPeerPublishedDisputePayoutTxMessage(PB.PeerPublishedDisputePayoutTxMessage.newBuilder()
-                        .setTransaction(ByteString.copyFrom(transaction))
-                        .setTradeId(tradeId)
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setUid(uid))
+                .setPeerOpenedMediationMessage(PB.PeerOpenedMediationMessage.newBuilder()
+                        .setUid(uid)
+                        .setMediation(mediation.toProtoMessage())
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
                 .build();
     }
 
-    public static PeerPublishedDisputePayoutTxMessage fromProto(PB.PeerPublishedDisputePayoutTxMessage proto, int messageVersion) {
-        return new PeerPublishedDisputePayoutTxMessage(proto.getTransaction().toByteArray(),
-                proto.getTradeId(),
+    public static PeerOpenedMediationMessage fromProto(PB.PeerOpenedMediationMessage proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
+        return new PeerOpenedMediationMessage(Mediation.fromProto(proto.getMediation(), coreProtoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
@@ -84,16 +77,15 @@ public final class PeerPublishedDisputePayoutTxMessage extends DisputeMessage {
 
     @Override
     public String getTradeId() {
-        return tradeId;
+        return mediation.getTradeId();
     }
 
     @Override
     public String toString() {
-        return "PeerPublishedDisputePayoutTxMessage{" +
-                "\n     transaction=" + Utilities.bytesAsHexString(transaction) +
-                ",\n     tradeId='" + tradeId + '\'' +
+        return "PeerOpenedMediationMessage{" +
+                "\n     mediation=" + mediation +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     PeerPublishedDisputePayoutTxMessage.uid='" + uid + '\'' +
+                ",\n     PeerOpenedMediationMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 "\n} " + super.toString();
     }

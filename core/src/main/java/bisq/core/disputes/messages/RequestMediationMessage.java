@@ -17,7 +17,7 @@
 
 package bisq.core.disputes.messages;
 
-import bisq.core.disputes.Dispute;
+import bisq.core.disputes.Mediation;
 import bisq.core.proto.CoreProtoResolver;
 
 import bisq.network.p2p.NodeAddress;
@@ -31,14 +31,14 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class RequestMediationMessage extends DisputeMessage {
-    private final Dispute dispute;
+public final class RequestMediationMessage extends MediationMessage {
+    private final Mediation mediation;
     private final NodeAddress senderNodeAddress;
 
-    public RequestMediationMessage(Dispute dispute,
+    public RequestMediationMessage(Mediation mediation,
                                  NodeAddress senderNodeAddress,
                                  String uid) {
-        this(dispute,
+        this(mediation,
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion());
@@ -49,12 +49,12 @@ public final class RequestMediationMessage extends DisputeMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RequestMediationMessage(Dispute dispute,
+    private RequestMediationMessage(Mediation mediation,
                                   NodeAddress senderNodeAddress,
                                   String uid,
                                   int messageVersion) {
         super(messageVersion, uid);
-        this.dispute = dispute;
+        this.mediation = mediation;
         this.senderNodeAddress = senderNodeAddress;
     }
 
@@ -63,7 +63,7 @@ public final class RequestMediationMessage extends DisputeMessage {
         return getNetworkEnvelopeBuilder()
                 .setRequestMediationMessage(PB.RequestMediationMessage.newBuilder()
                         .setUid(uid)
-                        .setDispute(dispute.toProtoMessage())
+                        .setMediation(mediation.toProtoMessage())
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
                 .build();
     }
@@ -71,7 +71,7 @@ public final class RequestMediationMessage extends DisputeMessage {
     public static RequestMediationMessage fromProto(PB.RequestMediationMessage proto,
                                                   CoreProtoResolver coreProtoResolver,
                                                   int messageVersion) {
-        return new RequestMediationMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
+        return new RequestMediationMessage(Mediation.fromProto(proto.getMediation(), coreProtoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
@@ -79,13 +79,13 @@ public final class RequestMediationMessage extends DisputeMessage {
 
     @Override
     public String getTradeId() {
-        return dispute.getTradeId();
+        return mediation.getTradeId();
     }
 
     @Override
     public String toString() {
         return "RequestMediationMessage{" +
-                "\n     dispute=" + dispute +
+                "\n     mediation=" + mediation +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     RequestMediationMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +

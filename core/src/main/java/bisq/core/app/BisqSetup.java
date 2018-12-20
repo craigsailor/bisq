@@ -23,6 +23,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.DisputeManager;
+import bisq.core.disputes.MediatorManager;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.BalanceModel;
@@ -128,6 +129,7 @@ public class BisqSetup {
     private final BalanceModel balanceModel;
     private final PriceFeedService priceFeedService;
     private final ArbitratorManager arbitratorManager;
+    private final MediatorManager mediatorManager;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
@@ -204,6 +206,7 @@ public class BisqSetup {
                      BalanceModel balanceModel,
                      PriceFeedService priceFeedService,
                      ArbitratorManager arbitratorManager,
+                     MediatorManager mediatorManager,
                      P2PService p2PService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
@@ -242,6 +245,7 @@ public class BisqSetup {
         this.balanceModel = balanceModel;
         this.priceFeedService = priceFeedService;
         this.arbitratorManager = arbitratorManager;
+        this.mediatorManager = mediatorManager;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -611,6 +615,7 @@ public class BisqSetup {
         openOfferManager.onAllServicesInitialized();
 
         arbitratorManager.onAllServicesInitialized();
+        mediatorManager.onAllServicesInitialized();
 
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
                 displayAlertIfPresent(newValue, false));
