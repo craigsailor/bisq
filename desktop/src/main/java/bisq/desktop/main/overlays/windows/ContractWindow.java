@@ -63,9 +63,9 @@ import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
 public class ContractWindow extends Overlay<ContractWindow> {
-    private final DisputeManager disputeManager;
+    private final MediationManager mediationManager;
     private final BSFormatter formatter;
-    private Dispute dispute;
+    private Mediation mediation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,14 +73,14 @@ public class ContractWindow extends Overlay<ContractWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractWindow(DisputeManager disputeManager, BSFormatter formatter) {
-        this.disputeManager = disputeManager;
+    public ContractWindow(MediationManager mediationManager, BSFormatter formatter) {
+        this.mediationManager = mediationManager;
         this.formatter = formatter;
         type = Type.Confirmation;
     }
 
-    public void show(Dispute dispute) {
-        this.dispute = dispute;
+    public void show(Mediation mediation) {
+        this.mediation = mediation;
 
         rowIndex = -1;
         width = 1168;
@@ -101,7 +101,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
     }
 
     private void addContent() {
-        Contract contract = dispute.getContract();
+        Contract contract = mediation.getContract();
         Offer offer = new Offer(contract.getOfferPayload());
 
         List<String> acceptedBanks = offer.getAcceptedBankIds();
@@ -110,10 +110,13 @@ public class ContractWindow extends Overlay<ContractWindow> {
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
 
         int rows = 17;
-        if (dispute.getDepositTxSerialized() != null)
+        if (mediation.getDepositTxSerialized() != null)
             rows++;
-        if (dispute.getPayoutTxSerialized() != null)
+// TODO: Create alternative since there is no automated payout
+/*
+        if (mediation.getPayoutTxSerialized() != null)
             rows++;
+*/
         if (showAcceptedCountryCodes)
             rows++;
         if (showAcceptedBanks)
@@ -124,7 +127,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.offerId"), offer.getId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("contractWindow.dates"),
-                formatter.formatDateTime(offer.getDate()) + " / " + formatter.formatDateTime(dispute.getTradeDate()));
+                formatter.formatDateTime(offer.getDate()) + " / " + formatter.formatDateTime(mediation.getTradeDate()));
         String currencyCode = offer.getCurrencyCode();
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.offerType"),
                 formatter.getDirectionBothSides(offer.getDirection(), currencyCode));
@@ -148,8 +151,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.onions"),
                 contract.getBuyerNodeAddress().getFullAddress() + " / " + contract.getSellerNodeAddress().getFullAddress());
 
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numDisputes"),
-                disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
+        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numMediations"),
+                mediationManager.getNrOfMediations(true, contract) + " / " + mediationManager.getNrOfMediations(false, contract));
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
                 contract.getBuyerPaymentAccountPayload().getPaymentDetails()).second.setMouseTransparent(false);
@@ -185,21 +188,24 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), contract.getTakerFeeTxID());
-        if (dispute.getDepositTxSerialized() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.depositTransactionId"), dispute.getDepositTxId());
-        if (dispute.getPayoutTxSerialized() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"), dispute.getPayoutTxId());
+        if (mediation.getDepositTxSerialized() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.depositTransactionId"), mediation.getDepositTxId());
+// TODO: Create alternative since there is no automated payout
+/*
+        if (mediation.getPayoutTxSerialized() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"), mediation.getPayoutTxId());
+*/
 
-        if (dispute.getContractHash() != null)
+        if (mediation.getContractHash() != null)
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.contractHash"),
-                    Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
+                    Utils.HEX.encode(mediation.getContractHash())).second.setMouseTransparent(false);
 
         Button viewContractButton = addConfirmationLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
                 Res.get("shared.viewContractAsJson"), 0).second;
         viewContractButton.setDefaultButton(false);
         viewContractButton.setOnAction(e -> {
             TextArea textArea = new BisqTextArea();
-            String contractAsJson = dispute.getContractAsJson();
+            String contractAsJson = mediation.getContractAsJson();
             contractAsJson += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());
             contractAsJson += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getSellerMultiSigPubKey());
             textArea.setText(contractAsJson);
@@ -210,7 +216,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
             Scene viewContractScene = new Scene(textArea);
             Stage viewContractStage = new Stage();
-            viewContractStage.setTitle(Res.get("shared.contract.title", dispute.getShortTradeId()));
+            viewContractStage.setTitle(Res.get("shared.contract.title", mediation.getShortTradeId()));
             viewContractStage.setScene(viewContractScene);
             if (owner == null)
                 owner = MainView.getRootContainer();
