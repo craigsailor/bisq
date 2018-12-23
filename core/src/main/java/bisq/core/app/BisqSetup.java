@@ -33,6 +33,7 @@ import bisq.core.dao.DaoSetup;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
+import bisq.core.disputes.MediatorManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.notifications.MobileNotificationService;
@@ -154,6 +155,7 @@ public class BisqSetup {
     private final VoteResultService voteResultService;
     private final AssetTradeActivityCheck tradeActivityCheck;
     private final AssetService assetService;
+    private final MediatorManager mediatorManager;
     private final BSFormatter formatter;
     @Setter
     @Nullable
@@ -230,6 +232,7 @@ public class BisqSetup {
                      VoteResultService voteResultService,
                      AssetTradeActivityCheck tradeActivityCheck,
                      AssetService assetService,
+                     MediatorManager mediatorManager,
                      BSFormatter formatter) {
 
 
@@ -268,6 +271,7 @@ public class BisqSetup {
         this.voteResultService = voteResultService;
         this.tradeActivityCheck = tradeActivityCheck;
         this.assetService = assetService;
+        this.mediatorManager = mediatorManager;
         this.formatter = formatter;
     }
 
@@ -611,6 +615,7 @@ public class BisqSetup {
         openOfferManager.onAllServicesInitialized();
 
         arbitratorManager.onAllServicesInitialized();
+        mediatorManager.onAllServicesInitialized();
 
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
                 displayAlertIfPresent(newValue, false));

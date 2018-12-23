@@ -1023,6 +1023,7 @@ message AddressEntry {
         RESERVED_FOR_TRADE = 4;
         MULTI_SIG = 5;
         TRADE_PAYOUT = 6;
+        MEDIATOR = 7;
     }
 
     string offer_id = 7;
