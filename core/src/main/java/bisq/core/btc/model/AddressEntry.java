@@ -53,12 +53,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class AddressEntry implements PersistablePayload {
     public enum Context {
         ARBITRATOR,
-        MEDIATOR,
         AVAILABLE,
         OFFER_FUNDING,
         RESERVED_FOR_TRADE,
         MULTI_SIG,
-        TRADE_PAYOUT
+        TRADE_PAYOUT,
+        MEDIATOR
     }
 
     // keyPair can be null in case the object is created from deserialization as it is transient.
