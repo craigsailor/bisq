@@ -228,14 +228,13 @@ public class MediationManager implements PersistedDataHost {
   }
 
   public void cleanupMediations() {
-    mediations
-        .stream()
-        .forEach(
-            mediation -> {
-              mediation.setStorage(mediationStorage);
-              if (mediation.isClosed()) closedMediations.put(mediation.getTradeId(), mediation);
-              else openMediations.put(mediation.getTradeId(), mediation);
-            });
+    mediations.stream().forEach( mediation -> {
+        mediation.setStorage(mediationStorage);
+        if (mediation.isClosed())
+			closedMediations.put(mediation.getTradeId(), mediation);
+        else
+			openMediations.put(mediation.getTradeId(), mediation);
+    });
 
     // If we have duplicate mediations we close the second one (might happen if both traders opened
     // a mediation and mediator
@@ -461,8 +460,7 @@ public class MediationManager implements PersistedDataHost {
   }
 
   // mediator sends that to trading peer when he received openMediation request
-  private String sendPeerOpenedMediationMessage(
-      Mediation mediationFromOpener, Contract contractFromOpener, PubKeyRing pubKeyRing) {
+  private String sendPeerOpenedMediationMessage(Mediation mediationFromOpener, Contract contractFromOpener, PubKeyRing pubKeyRing) {
     Mediation mediation =
         new Mediation(
             mediationStorage,

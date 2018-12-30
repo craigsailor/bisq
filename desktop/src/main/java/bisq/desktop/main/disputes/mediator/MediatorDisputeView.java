@@ -25,7 +25,7 @@ import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.arbitration.DisputeManager;
+import bisq.core.disputes.MediationManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -41,12 +41,12 @@ import javax.inject.Inject;
 public class MediatorDisputeView extends TraderDisputeView {
 
     @Inject
-    public MediatorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager,
+    public MediatorDisputeView(MediationManager mediationManager, KeyRing keyRing, TradeManager tradeManager,
                                  BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
                                  PrivateNotificationManager privateNotificationManager,
                                  ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow,
                                  P2PService p2PService, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(disputeManager, keyRing, tradeManager, formatter,
+        super(mediationManager, keyRing, tradeManager, formatter,
                 disputeSummaryWindow, privateNotificationManager, contractWindow,
                 tradeDetailsWindow, p2PService, useDevPrivilegeKeys);
     }
@@ -63,7 +63,7 @@ public class MediatorDisputeView extends TraderDisputeView {
     protected void applyFilteredListPredicate(String filterString) {
         // If in mediator view we must only display disputes where we are selected as mediator (must not receive others anyway)
         filteredList.setPredicate(dispute ->
-                dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()) &&
+                dispute.getMediatorPubKeyRing().equals(keyRing.getPubKeyRing()) &&
                         (filterString.isEmpty() ||
                                 (dispute.getId().contains(filterString) ||
                                         (!dispute.isClosed() && filterString.toLowerCase().equals("open")) ||
@@ -75,5 +75,3 @@ public class MediatorDisputeView extends TraderDisputeView {
     }
 
 }
-
-

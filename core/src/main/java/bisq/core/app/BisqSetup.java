@@ -24,6 +24,7 @@ import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.disputes.MediatorManager;
+import bisq.core.disputes.MediationManager;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.BalanceModel;
@@ -134,6 +135,7 @@ public class BisqSetup {
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final DisputeManager disputeManager;
+    private final MediationManager mediationManager;
     private final Preferences preferences;
     private final User user;
     private final AlertManager alertManager;
@@ -211,6 +213,7 @@ public class BisqSetup {
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      DisputeManager disputeManager,
+                     MediationManager mediationManager,
                      Preferences preferences,
                      User user,
                      AlertManager alertManager,
@@ -250,6 +253,7 @@ public class BisqSetup {
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.disputeManager = disputeManager;
+        this.mediationManager = mediationManager;
         this.preferences = preferences;
         this.user = user;
         this.alertManager = alertManager;
@@ -589,6 +593,7 @@ public class BisqSetup {
         PaymentMethod.onAllServicesInitialized();
 
         disputeManager.onAllServicesInitialized();
+        mediationManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
         tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> balanceModel.updateBalance());

@@ -74,7 +74,7 @@ public class MediationRequestView extends TraderDisputeView {
     // receive others anyway)
     filteredList.setPredicate(
         dispute ->
-            dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing())
+            dispute.getMediatorPubKeyRing().equals(keyRing.getPubKeyRing())
                 && (filterString.isEmpty()
                     || (dispute.getId().contains(filterString)
                         || (!dispute.isClosed() && filterString.toLowerCase().equals("open"))

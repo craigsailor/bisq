@@ -18,6 +18,7 @@
 package bisq.core.setup;
 
 import bisq.core.arbitration.DisputeManager;
+import bisq.core.disputes.MediationManager;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.governance.ballot.BallotListService;
@@ -60,6 +61,7 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));
         persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
         persistedDataHosts.add(injector.getInstance(DisputeManager.class));
+        persistedDataHosts.add(injector.getInstance(MediationManager.class));
         persistedDataHosts.add(injector.getInstance(P2PService.class));
 
         if (injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.DAO_ACTIVATED)))) {

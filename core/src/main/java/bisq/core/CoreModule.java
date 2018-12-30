@@ -26,6 +26,7 @@ import bisq.core.app.BisqSetup;
 import bisq.core.app.P2PNetworkSetup;
 import bisq.core.app.WalletAppSetup;
 import bisq.core.arbitration.ArbitratorModule;
+import bisq.core.disputes.MediatorModule;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;
@@ -131,6 +132,7 @@ public class CoreModule extends AppModule {
         install(tradeModule());
         install(encryptionServiceModule());
         install(arbitratorModule());
+        install(mediatorModule());
         install(offerModule());
         install(p2pModule());
         install(bitcoinModule());
@@ -150,6 +152,10 @@ public class CoreModule extends AppModule {
 
     private ArbitratorModule arbitratorModule() {
         return new ArbitratorModule(environment);
+    }
+
+    private MediatorModule mediatorModule() {
+        return new MediatorModule(environment);
     }
 
     private AlertModule alertModule() {

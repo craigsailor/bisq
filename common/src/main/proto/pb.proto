@@ -169,7 +169,7 @@ message CloseConnectionMessage {
 message AckMessage {
     string uid = 1;
     NodeAddress sender_node_address = 2;
-    string source_type = 3; // enum name. e.g.  TradeMessage, DisputeMessage,...
+    string source_type = 3; // enum name. e.g.  TradeMessage, DisputeMessage, MediationMessage,...
     string source_msg_class_name = 4;
     string source_uid = 5; // uid of source (TradeMessage)
     string source_id = 6; // id of source (tradeId, disputeId)
@@ -641,10 +641,10 @@ message Mediation {
     bytes contract_hash = 10;
     bytes deposit_tx_serialized = 11;
 // TODO: Change since mediation does not have automatic payout
-//    bytes payout_tx_serialized = 12;
+    bytes payout_tx_serialized = 12;
     string deposit_tx_id = 13;
 // TODO: Change since mediation does not have automatic payout
-//    string payout_tx_id = 14;
+    string payout_tx_id = 14;
     string contract_as_json = 15;
     string maker_contract_signature = 16;
     string taker_contract_signature = 17;

@@ -550,8 +550,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private void onCloseMediation(Mediation mediation) {
         long protocolVersion = mediation.getContract().getOfferPayload().getProtocolVersion();
         if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
+// TODO: Replace this once the close mediation part is done
+/*
             mediationSummaryWindow.onFinalizeMediation(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
                     .show(mediation);
+*/
         } else {
             new Popup<>()
                     .warning(Res.get("support.wrongVersion", protocolVersion))
@@ -693,7 +696,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             inputTextArea = new BisqTextArea();
             inputTextArea.setPrefHeight(70);
             inputTextArea.setWrapText(true);
-            if (!(this instanceof MediatorMediationView))
+            if (!(this instanceof MediatorDisputeView))
                 inputTextArea.setPromptText(Res.get("support.input.prompt"));
 
             sendButton = new AutoTooltipButton(Res.get("support.send"));
