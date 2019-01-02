@@ -361,11 +361,8 @@ class TakeOfferDataModel extends OfferDataModel {
                 txSize = tradeFeeTx.bitcoinSerialize().length;
                 // use feeTxSizeEstimationRecursionCounter to avoid risk for endless loop
                 // We use the tx size for the trade fee tx as target for the fees.
-                // The deposit and payout txs are determined +/- 1 output but the trade fee tx can have either 1 or many inputs
-                // so we need to make sure the trade fee tx gets the correct fee to not get stuck.
-                // We use a 20% tolerance frm out default 320 byte size (typical for deposit and payout) and only if we get a
-                // larger size we increase the fee. Worst case is that we overpay for the other follow up txs, but better than
-                // use a too low fee and get stuck.
+                // The deposit and payout txs are determined +/- 1 output but the trade fee tx can have either 1 or many inputs so we need to make sure the trade fee tx gets the correct fee to not get stuck.
+                // We use a 20% tolerance frm out default 320 byte size (typical for deposit and payout) and only if we get a larger size we increase the fee. Worst case is that we overpay for the other follow up txs, but better than use a too low fee and get stuck.
                 if (txSize > feeTxSize * 1.2 && feeTxSizeEstimationRecursionCounter < 10) {
                     feeTxSizeEstimationRecursionCounter++;
                     log.info("txSize is {} bytes but feeTxSize used for txFee calculation was {} bytes. We try again with an " +

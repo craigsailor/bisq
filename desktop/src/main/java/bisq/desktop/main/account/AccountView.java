@@ -112,6 +112,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
             }
         };
 
+		// Keypress to open AddArbitrator
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) &&
                     arbitratorRegistrationTab == null) {
