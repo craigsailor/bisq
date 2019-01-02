@@ -143,6 +143,7 @@ public class MediatorManager {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // FIXME: Not called yet, so causeing nullpointer with persistedAcceptedMediators
     public void onAllServicesInitialized() {
         mediatorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
