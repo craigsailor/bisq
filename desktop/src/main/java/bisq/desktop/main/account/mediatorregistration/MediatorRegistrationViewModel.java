@@ -19,8 +19,6 @@ package bisq.desktop.main.account.mediatorregistration;
 
 import bisq.desktop.common.model.ActivatableViewModel;
 
-//import bisq.core.arbitration.Arbitrator;
-//import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.disputes.Mediator;
 import bisq.core.disputes.MediatorManager;
 import bisq.core.btc.model.AddressEntry;

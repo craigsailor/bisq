@@ -592,8 +592,8 @@ public class BisqSetup {
 
         PaymentMethod.onAllServicesInitialized();
 
-        disputeManager.onAllServicesInitialized();
         mediationManager.onAllServicesInitialized();
+        disputeManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
         tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> balanceModel.updateBalance());
@@ -619,8 +619,8 @@ public class BisqSetup {
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> balanceModel.updateBalance());
         openOfferManager.onAllServicesInitialized();
 
-        arbitratorManager.onAllServicesInitialized();
         mediatorManager.onAllServicesInitialized();
+        arbitratorManager.onAllServicesInitialized();
 
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
                 displayAlertIfPresent(newValue, false));

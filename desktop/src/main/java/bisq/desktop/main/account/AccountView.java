@@ -101,11 +101,11 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 		// No problem though since it will replace the Arbitrator eventually.
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
-                if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class))
+                if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class)) {
                     navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
                 else if (mediatorRegistrationTab == null && viewPath.get(2).equals(MediatorRegistrationView.class))
                     navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
-                else
+                } else
                     loadView(viewPath.tip());
             } else {
                 resetSelectedTab();
@@ -114,8 +114,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
 		// Keypress to open AddArbitrator
         keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) &&
-                    arbitratorRegistrationTab == null) {
+            if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) && arbitratorRegistrationTab == null) {
                 arbitratorRegistrationTab = new Tab(Res.get("account.tab.arbitratorRegistration").toUpperCase());
                 arbitratorRegistrationTab.setClosable(true);
                 root.getTabs().add(arbitratorRegistrationTab);
@@ -126,8 +125,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
 		// Keypress to open AddMediator
         keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.M, event) &&
-                    mediatorRegistrationTab == null) {
+            if (Utilities.isAltOrCtrlPressed(KeyCode.Y, event) && mediatorRegistrationTab == null) {
                 mediatorRegistrationTab = new Tab(Res.get("account.tab.mediatorRegistration").toUpperCase());
                 mediatorRegistrationTab.setClosable(true);
                 root.getTabs().add(mediatorRegistrationTab);
@@ -139,7 +137,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (arbitratorRegistrationTab != null && selectedTab != arbitratorRegistrationTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
-            } else if (mediatorRegistrationTab != null) {
+            } else if (mediatorRegistrationTab != null && selectedTab != mediatorRegistrationTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             } else if (newValue == fiatAccountsTab && selectedTab != fiatAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
