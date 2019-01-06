@@ -31,7 +31,6 @@ public class ArbitratorModule extends AppModule {
     @Override
     protected final void configure() {
         bind(ArbitratorManager.class).in(Singleton.class);
-        bind(ArbitratorManager.class).in(Singleton.class);
         bind(DisputeManager.class).in(Singleton.class);
         bind(ArbitratorService.class).in(Singleton.class);
     }
