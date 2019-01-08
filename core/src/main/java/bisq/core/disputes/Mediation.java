@@ -118,7 +118,7 @@ public final class Mediation implements NetworkPayload {
                    String contractAsJson,
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
-                   PubKeyRing mediatorPubKeyRing,
+                   @Nullable PubKeyRing mediatorPubKeyRing,
                    boolean isSupportTicket) {
         this(tradeId,
              traderId,

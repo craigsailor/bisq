@@ -101,7 +101,9 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     new ArrayList<>(acceptedArbitratorAddresses),
                     new ArrayList<>(acceptedMediatorAddresses),
                     trade.getArbitratorNodeAddress(),
-                    trade.getMediatorNodeAddress(),
+                    trade.getArbitratorNodeAddress(),
+					// TODO Get rid of this and the line above once we get rid of the Arbitrator
+                    //trade.getMediatorNodeAddress(),
                     UUID.randomUUID().toString(),
                     Version.getP2PMessageVersion(),
                     sig,

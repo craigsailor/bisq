@@ -250,22 +250,22 @@ public class SellerStep3View extends TradeStepView {
         String substitute = model.isBlockChainMethod() ?
                 Res.get("portfolio.pending.step3_seller.warn.part1a", model.dataModel.getCurrencyCode()) :
                 Res.get("portfolio.pending.step3_seller.warn.part1b");
-        return Res.get("portfolio.pending.step3_seller.warn.part2", substitute, model.getDateForOpenDispute());
+        return Res.get("portfolio.pending.step3_seller.warn.part2", substitute, model.getDateForOpenMediation());
 
 
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Dispute
+    // Mediation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
-        return Res.get("portfolio.pending.step3_seller.openForDispute");
+    protected String getOpenForMediationText() {
+        return Res.get("portfolio.pending.step3_seller.openForMediation");
     }
 
     @Override
-    protected void applyOnDisputeOpened() {
+    protected void applyOnMediationOpened() {
         confirmButton.setDisable(true);
     }
 
@@ -339,7 +339,7 @@ public class SellerStep3View extends TradeStepView {
                 message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
             }
 
-            String part = Res.get("portfolio.pending.step3_seller.openDispute");
+            String part = Res.get("portfolio.pending.step3_seller.openMediation");
             if (paymentAccountPayload instanceof CashDepositAccountPayload)
                 message = message + Res.get("portfolio.pending.step3_seller.cash", part);
             else if (paymentAccountPayload instanceof WesternUnionAccountPayload)

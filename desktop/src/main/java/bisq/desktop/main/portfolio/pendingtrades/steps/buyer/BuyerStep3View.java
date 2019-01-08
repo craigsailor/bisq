@@ -134,20 +134,20 @@ public class BuyerStep3View extends TradeStepView {
         String substitute = model.isBlockChainMethod() ?
                 Res.get("portfolio.pending.step3_buyer.warn.part1a", model.dataModel.getCurrencyCode()) :
                 Res.get("portfolio.pending.step3_buyer.warn.part1b");
-        return Res.get("portfolio.pending.step3_buyer.warn.part2", substitute, model.getDateForOpenDispute());
+        return Res.get("portfolio.pending.step3_buyer.warn.part2", substitute, model.getDateForOpenMediation());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Dispute
+    // Mediation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
-        return Res.get("portfolio.pending.step3_buyer.openForDispute");
+    protected String getOpenForMediationText() {
+        return Res.get("portfolio.pending.step3_buyer.openForMediation");
     }
 
     @Override
-    protected void applyOnDisputeOpened() {
+    protected void applyOnMediationOpened() {
     }
 }
 

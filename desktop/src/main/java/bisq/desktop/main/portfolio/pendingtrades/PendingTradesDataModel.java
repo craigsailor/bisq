@@ -27,9 +27,10 @@ import bisq.desktop.main.overlays.windows.SelectDepositTxWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeAlreadyOpenException;
-import bisq.core.arbitration.DisputeManager;
+import bisq.core.disputes.Mediation;
+import bisq.core.disputes.MediationAlreadyOpenException;
+import bisq.core.disputes.MediationManager;
+
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
@@ -81,7 +82,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final TradeManager tradeManager;
     public final BtcWalletService btcWalletService;
     private final KeyRing keyRing;
-    public final DisputeManager disputeManager;
+    public final MediationManager mediationManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     public final Navigation navigation;
@@ -107,7 +108,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public PendingTradesDataModel(TradeManager tradeManager,
                                   BtcWalletService btcWalletService,
                                   KeyRing keyRing,
-                                  DisputeManager disputeManager,
+                                  MediationManager mediationManager,
                                   Preferences preferences,
                                   P2PService p2PService,
                                   WalletsSetup walletsSetup,
@@ -117,7 +118,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.keyRing = keyRing;
-        this.disputeManager = disputeManager;
+        this.mediationManager = mediationManager;
         this.preferences = preferences;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
@@ -158,7 +159,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         final Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade");
-        checkArgument(trade.getDisputeState() == Trade.DisputeState.NO_DISPUTE, "Check failed: trade.getDisputeState() == Trade.DisputeState.NONE");
+        checkArgument(trade.getMediationState() == Trade.MediationState.NO_MEDIATION, "Check failed: trade.getMediationState() == Trade.MediationState.NONE");
         // TODO UI not impl yet
         trade.setCounterCurrencyTxId("");
         ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);
@@ -167,7 +168,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkNotNull(getTrade(), "trade must not be null");
         checkArgument(getTrade() instanceof SellerTrade, "Check failed: trade not instanceof SellerTrade");
-        if (getTrade().getDisputeState() == Trade.DisputeState.NO_DISPUTE)
+        if (getTrade().getMediationState() == Trade.MediationState.NO_MEDIATION)
             ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
     }
 
@@ -194,12 +195,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         }
     }
 
-    public void onOpenDispute() {
-        tryOpenDispute(false);
+    public void onOpenMediation() {
+        tryOpenMediation(false);
     }
 
     public void onOpenSupportTicket() {
-        tryOpenDispute(true);
+        tryOpenMediation(true);
     }
 
     public void onMoveToFailedTrades() {
@@ -400,15 +401,16 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         selectedItemProperty.set(item);
     }
 
-    private void tryOpenDispute(boolean isSupportTicket) {
+    private void tryOpenMediation(boolean isSupportTicket) {
         if (getTrade() != null) {
             Transaction depositTx = getTrade().getDepositTx();
             if (depositTx != null) {
-                doOpenDispute(isSupportTicket, getTrade().getDepositTx());
+                doOpenMediation(isSupportTicket, getTrade().getDepositTx());
             } else {
                 log.info("Trade.depositTx is null. We try to find the tx in our wallet.");
                 List<Transaction> candidates = new ArrayList<>();
                 List<Transaction> transactions = btcWalletService.getRecentTransactions(100, true);
+
                 transactions.stream().forEach(transaction -> {
                     Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
                     if (!valueSentFromMe.isZero()) {
@@ -423,10 +425,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 });
 
                 if (candidates.size() == 1)
-                    doOpenDispute(isSupportTicket, candidates.get(0));
+                    doOpenMediation(isSupportTicket, candidates.get(0));
                 else if (candidates.size() > 1)
                     new SelectDepositTxWindow().transactions(candidates)
-                            .onSelect(transaction -> doOpenDispute(isSupportTicket, transaction))
+                            .onSelect(transaction -> doOpenMediation(isSupportTicket, transaction))
                             .closeButtonText(Res.get("shared.cancel"))
                             .show();
                 else
@@ -437,7 +439,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         }
     }
 
-    private void doOpenDispute(boolean isSupportTicket, Transaction depositTx) {
+    private void doOpenMediation(boolean isSupportTicket, Transaction depositTx) {
         Log.traceCall("depositTx=" + depositTx);
         byte[] depositTxSerialized = null;
         byte[] payoutTxSerialized = null;
@@ -456,12 +458,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 payoutTxSerialized = payoutTx.bitcoinSerialize();
                 payoutTxHashAsString = payoutTx.getHashAsString();
             } else {
-                log.debug("payoutTx is null at doOpenDispute");
+                log.debug("payoutTx is null at doOpenMediation");
             }
 
-            final PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
-            checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must no tbe null");
-            Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
+            Mediation mediation = new Mediation(
+					mediationManager.getMediationStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
                     trade.getOffer().getDirection() == OfferPayload.Direction.BUY ? isMaker : !isMaker,
@@ -471,37 +472,37 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getContract(),
                     trade.getContractHash(),
                     depositTxSerialized,
-                    payoutTxSerialized,
+                    //payoutTxSerialized,
                     depositTxHashAsString,
-                    payoutTxHashAsString,
+                    //payoutTxHashAsString,
                     trade.getContractAsJson(),
                     trade.getMakerContractSignature(),
                     trade.getTakerContractSignature(),
-                    arbitratorPubKeyRing,
+					null,
                     isSupportTicket
             );
 
-            trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
+            trade.setMediationState(Trade.MediationState.MEDIATION_REQUESTED);
             if (p2PService.isBootstrapped()) {
-                sendOpenNewDisputeMessage(dispute, false);
+                sendOpenNewMediationMessage(mediation, false);
             } else {
                 new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
             }
         } else {
-            log.warn("trade is null at doOpenDispute");
+            log.warn("trade is null at doOpenMediation");
         }
     }
 
-    private void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen) {
-        disputeManager.sendOpenNewDisputeMessage(dispute,
+    private void sendOpenNewMediationMessage(Mediation mediation, boolean reOpen) {
+        mediationManager.sendOpenNewMediationMessage(mediation,
                 reOpen,
                 () -> navigation.navigateTo(MainView.class, DisputesView.class),
                 (errorMessage, throwable) -> {
-                    if ((throwable instanceof DisputeAlreadyOpenException)) {
-                        errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
+                    if ((throwable instanceof MediationAlreadyOpenException)) {
+                        errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainMediation.msg");
                         new Popup<>().warning(errorMessage)
-                                .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
-                                .onAction(() -> sendOpenNewDisputeMessage(dispute, true))
+                                .actionButtonText(Res.get("portfolio.pending.openAgainMediation.button"))
+                                .onAction(() -> sendOpenNewMediationMessage(mediation, true))
                                 .closeButtonText(Res.get("shared.cancel"))
                                 .show();
                     } else {

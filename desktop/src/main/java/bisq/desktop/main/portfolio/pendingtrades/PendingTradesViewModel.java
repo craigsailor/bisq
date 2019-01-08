@@ -234,7 +234,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             return 0;
     }
 
-    public String getDateForOpenDispute() {
+    public String getDateForOpenMediation() {
         return btcFormatter.formatDateTime(new Date(new Date().getTime() + getRemainingTradeDuration()));
     }
 
@@ -242,7 +242,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return getHalfTradePeriodDate() != null && new Date().after(getHalfTradePeriodDate());
     }
 
-    public boolean showDispute() {
+    public boolean showMediation() {
         return getMaxTradePeriodDate() != null && new Date().after(getMaxTradePeriodDate());
     }
 

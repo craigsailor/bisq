@@ -74,21 +74,21 @@ public class SellerStep2View extends TradeStepView {
         setInformationHeadline();
         return Res.get("portfolio.pending.step2_seller.warn",
                 model.dataModel.getCurrencyCode(),
-                model.getDateForOpenDispute());
+                model.getDateForOpenMediation());
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Dispute
+    // Mediation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
-        return Res.get("portfolio.pending.step2_seller.openForDispute");
+    protected String getOpenForMediationText() {
+        return Res.get("portfolio.pending.step2_seller.openForMediation");
     }
 
     @Override
-    protected void applyOnDisputeOpened() {
+    protected void applyOnMediationOpened() {
     }
 }
 

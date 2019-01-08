@@ -1295,6 +1295,7 @@ message Trade {
     PubKeyRing arbitrator_pub_key_ring = 26;
     PubKeyRing mediator_pub_key_ring = 27;
     string counter_currency_tx_id = 28;
+    MediationState mediation_state = 29;
 }
 
 message BuyerAsMakerTrade {

@@ -1345,7 +1345,4 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         if (messageListView != null)
             UserThread.execute(() -> messageListView.scrollTo(Integer.MAX_VALUE));
     }
-
 }
-
-

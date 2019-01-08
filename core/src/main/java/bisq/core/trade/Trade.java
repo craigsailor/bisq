@@ -451,6 +451,7 @@ public abstract class Trade implements Tradable, Model {
                 .setTradePrice(tradePrice)
                 .setState(PB.Trade.State.valueOf(state.name()))
                 .setDisputeState(PB.Trade.DisputeState.valueOf(disputeState.name()))
+                .setMediationState(PB.Trade.MediationState.valueOf(mediationState.name()))
                 .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()));
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
@@ -478,6 +479,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setProcessModel(ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver));
         trade.setState(State.fromProto(proto.getState()));
         trade.setDisputeState(DisputeState.fromProto(proto.getDisputeState()));
+        trade.setMediationState(MediationState.fromProto(proto.getMediationState()));
         trade.setTradePeriodState(TradePeriodState.fromProto(proto.getTradePeriodState()));
         trade.setTakerFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakerFeeTxId()));
         trade.setDepositTxId(ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()));
@@ -855,6 +857,10 @@ public abstract class Trade implements Tradable, Model {
         return disputeStateProperty;
     }
 
+    public ReadOnlyObjectProperty<MediationState> mediationStateProperty() {
+        return mediationStateProperty;
+    }
+
     public ReadOnlyObjectProperty<TradePeriodState> tradePeriodStateProperty() {
         return tradePeriodStateProperty;
     }
@@ -1020,6 +1026,7 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     decryptedMessageWithPubKeySet=" + decryptedMessageWithPubKeySet +
                 ",\n     arbitratorPubKeyRing=" + arbitratorPubKeyRing +
                 ",\n     mediatorPubKeyRing=" + mediatorPubKeyRing +
+                ",\n     mediationStateProperty=" + mediationStateProperty +
                 "\n}";
     }
 }

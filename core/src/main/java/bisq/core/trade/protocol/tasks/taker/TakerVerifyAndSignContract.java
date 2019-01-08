@@ -86,7 +86,9 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     buyerNodeAddress,
                     sellerNodeAddress,
                     trade.getArbitratorNodeAddress(),
-                    trade.getMediatorNodeAddress(),
+                    trade.getArbitratorNodeAddress(),
+					// TODO Get rid of the line above and below along with Arbitrator removal
+                    //trade.getMediatorNodeAddress(),
                     isBuyerMakerAndSellerTaker,
                     maker.getAccountId(),
                     processModel.getAccountId(),

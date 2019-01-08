@@ -75,7 +75,7 @@ public class UnlockMediatorRegistrationWindow extends Overlay<UnlockMediatorRegi
         }
 
         if (headLine == null)
-            headLine = Res.get("enterPrivKeyWindow.headline");
+            headLine = Res.get("enterPrivKeyWindowMediator.headline");
 
         createGridPane();
         addHeadLine();
@@ -123,5 +123,25 @@ public class UnlockMediatorRegistrationWindow extends Overlay<UnlockMediatorRegi
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
         changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(newValue.length() == 0);
         keyInputTextField.textProperty().addListener(changeListener);
+    }
+
+    @Override
+    protected void addButtons() {
+        final Tuple2<Button, Button> buttonButtonTuple2 = add2ButtonsAfterGroup(gridPane, ++rowIndex,
+                Res.get("shared.unlock"), Res.get("shared.close"));
+        unlockButton = buttonButtonTuple2.first;
+        unlockButton.setDisable(keyInputTextField.getText().length() == 0);
+        unlockButton.setOnAction(e -> {
+            if (privKeyHandler.checkKey(keyInputTextField.getText()))
+                hide();
+            else
+                new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+        });
+
+        Button closeButton = buttonButtonTuple2.second;
+        closeButton.setOnAction(event -> {
+            hide();
+            closeHandlerOptional.ifPresent(Runnable::run);
+        });
     }
 }

@@ -24,7 +24,7 @@ import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
-import bisq.core.arbitration.DisputeManager;
+import bisq.core.disputes.MediationManager;
 import bisq.core.locale.Res;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;
@@ -76,10 +76,10 @@ public class NotificationCenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final TradeManager tradeManager;
-    private final DisputeManager disputeManager;
+    private final MediationManager mediationManager;
     private final Navigation navigation;
 
-    private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();
+    private final Map<String, Subscription> mediationStateSubscriptionsMap = new HashMap<>();
     private final Map<String, Subscription> tradePhaseSubscriptionsMap = new HashMap<>();
     @Nullable
     private String selectedTradeId;
@@ -89,9 +89,9 @@ public class NotificationCenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public NotificationCenter(TradeManager tradeManager, DisputeManager disputeManager, Preferences preferences, Navigation navigation) {
+    public NotificationCenter(TradeManager tradeManager, MediationManager mediationManager, Preferences preferences, Navigation navigation) {
         this.tradeManager = tradeManager;
-        this.disputeManager = disputeManager;
+        this.mediationManager = mediationManager;
         this.navigation = navigation;
 
         EasyBind.subscribe(preferences.getUseAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);
@@ -103,9 +103,9 @@ public class NotificationCenter {
             if (change.wasRemoved()) {
                 change.getRemoved().stream().forEach(trade -> {
                     String tradeId = trade.getId();
-                    if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
-                        disputeStateSubscriptionsMap.get(tradeId).unsubscribe();
-                        disputeStateSubscriptionsMap.remove(tradeId);
+                    if (mediationStateSubscriptionsMap.containsKey(tradeId)) {
+                        mediationStateSubscriptionsMap.get(tradeId).unsubscribe();
+                        mediationStateSubscriptionsMap.remove(tradeId);
                     }
 
                     if (tradePhaseSubscriptionsMap.containsKey(tradeId)) {
@@ -117,12 +117,12 @@ public class NotificationCenter {
             if (change.wasAdded()) {
                 change.getAddedSubList().stream().forEach(trade -> {
                     String tradeId = trade.getId();
-                    if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
-                        log.debug("We have already an entry in disputeStateSubscriptionsMap.");
+                    if (mediationStateSubscriptionsMap.containsKey(tradeId)) {
+                        log.debug("We have already an entry in mediationStateSubscriptionsMap.");
                     } else {
-                        Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
-                                disputeState -> onDisputeStateChanged(trade, disputeState));
-                        disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
+                        Subscription mediationStateSubscription = EasyBind.subscribe(trade.mediationStateProperty(),
+                                mediationState -> onMediationStateChanged(trade, mediationState));
+                        mediationStateSubscriptionsMap.put(tradeId, mediationStateSubscription);
                     }
 
                     if (tradePhaseSubscriptionsMap.containsKey(tradeId)) {
@@ -139,9 +139,9 @@ public class NotificationCenter {
         tradeManager.getTradableList().stream()
                 .forEach(trade -> {
                             String tradeId = trade.getId();
-                            Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
-                                    disputeState -> onDisputeStateChanged(trade, disputeState));
-                            disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
+                            Subscription mediationStateSubscription = EasyBind.subscribe(trade.mediationStateProperty(),
+                                    mediationState -> onMediationStateChanged(trade, mediationState));
+                            mediationStateSubscriptionsMap.put(tradeId, mediationStateSubscription);
 
                             Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
                                     phase -> onTradePhaseChanged(trade, phase));
@@ -216,25 +216,26 @@ public class NotificationCenter {
         }
     }
 
-    private void onDisputeStateChanged(Trade trade, Trade.DisputeState disputeState) {
-        Log.traceCall(disputeState.toString());
+    private void onMediationStateChanged(Trade trade, Trade.MediationState mediationState) {
+        Log.traceCall(mediationState.toString());
         String message = null;
-        if (disputeManager.findOwnDispute(trade.getId()).isPresent()) {
-            String disputeOrTicket = disputeManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
+        if (mediationManager.findOwnMediation(trade.getId()).isPresent()) {
+            String mediationOrTicket = mediationManager.findOwnMediation(trade.getId()).get().isSupportTicket() ?
                     Res.get("shared.supportTicket") :
-                    Res.get("shared.dispute");
-            switch (disputeState) {
-                case NO_DISPUTE:
+                    Res.get("shared.mediation");
+            switch (mediationState) {
+                case NO_MEDIATION:
                     break;
-                case DISPUTE_REQUESTED:
+                case MEDIATION_REQUESTED:
                     break;
-                case DISPUTE_STARTED_BY_PEER:
-                    message = Res.get("notification.trade.peerOpenedDispute", disputeOrTicket);
+                case MEDIATION_STARTED_BY_PEER:
+                    message = Res.get("notification.trade.peerOpenedDispute", mediationOrTicket);
                     break;
-                case DISPUTE_CLOSED:
-                    message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
+                case MEDIATION_CLOSED:
+                    message = Res.get("notification.trade.mediationClosed", mediationOrTicket);
                     break;
             }
+
             if (message != null) {
                 Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
                 if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TraderDisputeView.class)) {

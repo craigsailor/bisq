@@ -57,12 +57,12 @@ public class BuyerStep1View extends TradeStepView {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Dispute
+    // Mediation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
-        return Res.get("portfolio.pending.step1.openForDispute");
+    protected String getOpenForMediationText() {
+        return Res.get("portfolio.pending.step1.openForMediation");
     }
 }
 

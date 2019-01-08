@@ -53,7 +53,6 @@ public abstract class TradeSubView extends HBox {
     protected VBox leftVBox;
     protected AnchorPane contentPane;
     protected TradeStepView tradeStepView;
-    private AutoTooltipButton openDisputeButton;
     private AutoTooltipButton openMediationButton;
     private AutoTooltipButton traderCommButton;
     private NotificationGroup notificationGroup;
@@ -84,9 +83,6 @@ public abstract class TradeSubView extends HBox {
 
         if (tradeStepView != null)
             tradeStepView.deactivate();
-
-        if (openDisputeButton != null)
-            leftGridPane.getChildren().remove(openDisputeButton);
 
         if (openMediationButton != null)
             leftGridPane.getChildren().remove(openMediationButton);
@@ -132,7 +128,7 @@ public abstract class TradeSubView extends HBox {
 /*
 		// Add action to comm button
 		traderCommButton.setOnAction(e -> {
-			model.dataModel.onOpenDispute();
+			model.dataModel.onOpenMediation();
 		});
 */
 
@@ -147,9 +143,16 @@ public abstract class TradeSubView extends HBox {
         openMediationButton.setId("open-mediation-button");
 
         mediationNotificationGroup = new NotificationGroup(mediationTitledGroupBg, mediationLabel, openMediationButton);
-        mediationNotificationGroup.setLabelAndHeadlineVisible(false);
-        mediationNotificationGroup.setButtonVisible(false);
+        mediationNotificationGroup.setLabelAndHeadlineVisible(true);
+        mediationNotificationGroup.setButtonVisible(true);
     }
+// TODO: Activate this part to make the button do something
+/*
+		// Add action to Mediation button
+		openMediationButton.setOnAction(e -> {
+			model.dataModel.onOpenMediation();
+		});
+*/
 
     public static class NotificationGroup {
         public final TitledGroupBg titledGroupBg;
