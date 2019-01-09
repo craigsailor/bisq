@@ -17,12 +17,27 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
-import bisq.asset.Coin;
+import bisq.asset.AbstractAssetTest;
 
-public class BitcoinClashic extends Coin {
+import org.junit.Test;
 
-    public BitcoinClashic() {
-        super("Bitcoin Clashic", "BCHC", new Base58BitcoinAddressValidator());
+public class BitmarkTest extends AbstractAssetTest {
+
+    public BitmarkTest() {
+        super(new Bitmark());
+    }
+
+    @Test
+    public void testValidAddresses() {
+        assertValidAddress("bMigVohTEiA3gxhFWpDJBrZ14j2RnDkWCs");
+        assertValidAddress("bKMivcHXMNfs3P3AaTtyhDiZ7s8Nw3ek6L");
+        assertValidAddress("bXUYGzbV8v6pLZtkYDL3feyrRFFnc37e3H");
+    }
+
+    @Test
+    public void testInvalidAddresses() {
+        assertInvalidAddress("bMigVohTEiA3gxhFWpDJBrZ14j2RnDkWCt");
+        assertInvalidAddress("F9z7PKmo1sLQYtFuZjTQ1zZXhPQtHLScKT");
+        assertInvalidAddress("16Ftsh4Ff2ijPNsnQAUf5fKTp7DJaGxSZK");
     }
 }
