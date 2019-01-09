@@ -175,10 +175,15 @@ public abstract class TradeStepView extends AnchorPane {
                 updateMediationState(newValue);
         });
 
+// TODO Decide if we want to wait some period of time before allowing mediation. For now it will be enabled immediately
+/*
         tradePeriodStateSubscription = EasyBind.subscribe(trade.tradePeriodStateProperty(), newValue -> {
             if (newValue != null)
                 updateTradePeriodState(newValue);
         });
+*/
+		// Activate Mediation Button
+		onOpenForMediation();
 
         model.clock.addListener(clockListener);
 
