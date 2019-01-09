@@ -125,12 +125,12 @@ public abstract class TradeSubView extends HBox {
         traderCommButton.setManaged(true);
 
 // TODO: Activate this part to make the button do something
-/*
+
 		// Add action to comm button
 		traderCommButton.setOnAction(e -> {
-			model.dataModel.onOpenMediation();
+			log.warn("** TradeComm Button Pushed **");
+			//model.dataModel.onOpenMediation();
 		});
-*/
 
 		// Add Mediation Request Button
         TitledGroupBg mediationTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", 0);
@@ -142,17 +142,15 @@ public abstract class TradeSubView extends HBox {
         GridPane.setColumnIndex(openMediationButton, 0);
         openMediationButton.setId("open-mediation-button");
 
+// TODO: Activate this part to make the button do something
+
+		// Add action to Mediation button
+		openMediationButton.setOnAction(e -> model.dataModel.onOpenMediation());
+
         mediationNotificationGroup = new NotificationGroup(mediationTitledGroupBg, mediationLabel, openMediationButton);
         mediationNotificationGroup.setLabelAndHeadlineVisible(true);
         mediationNotificationGroup.setButtonVisible(true);
     }
-// TODO: Activate this part to make the button do something
-/*
-		// Add action to Mediation button
-		openMediationButton.setOnAction(e -> {
-			model.dataModel.onOpenMediation();
-		});
-*/
 
     public static class NotificationGroup {
         public final TitledGroupBg titledGroupBg;

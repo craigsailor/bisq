@@ -78,6 +78,11 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * The UI overview for a trade that is in progress but is not yet complete
+ *
+ */
+
 public class PendingTradesDataModel extends ActivatableDataModel {
     public final TradeManager tradeManager;
     public final BtcWalletService btcWalletService;
@@ -401,6 +406,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         selectedItemProperty.set(item);
     }
 
+	/**
+	 * Try to open a Mediaiton for the currently viewed trade. Check that all conditions are satisfied.
+	 *
+	 * *param isSupportTicket(boolean) - true for support ticket, false for mediation
+	 *
+	 */
     private void tryOpenMediation(boolean isSupportTicket) {
         if (getTrade() != null) {
             Transaction depositTx = getTrade().getDepositTx();

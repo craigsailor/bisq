@@ -477,6 +477,10 @@ public class BSFormatter {
         return nodeAddresses.stream().map(NodeAddress::getFullAddress).collect(Collectors.joining(", "));
     }
 
+    public String mediatorAddressesToString(List<NodeAddress> nodeAddresses) {
+        return nodeAddresses.stream().map(NodeAddress::getFullAddress).collect(Collectors.joining(", "));
+    }
+
     public String languageCodesToString(List<String> languageLocales) {
         return languageLocales.stream().map(LanguageUtil::getDisplayName).collect(Collectors.joining(", "));
     }

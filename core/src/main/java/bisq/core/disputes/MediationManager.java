@@ -228,13 +228,14 @@ public class MediationManager implements PersistedDataHost {
   }
 
   public void cleanupMediations() {
-    mediations.stream().forEach( mediation -> {
-        mediation.setStorage(mediationStorage);
-        if (mediation.isClosed())
-			closedMediations.put(mediation.getTradeId(), mediation);
-        else
-			openMediations.put(mediation.getTradeId(), mediation);
-    });
+    mediations
+        .stream()
+        .forEach(
+            mediation -> {
+              mediation.setStorage(mediationStorage);
+              if (mediation.isClosed()) closedMediations.put(mediation.getTradeId(), mediation);
+              else openMediations.put(mediation.getTradeId(), mediation);
+            });
 
     // If we have duplicate mediations we close the second one (might happen if both traders opened
     // a mediation and mediator
@@ -342,8 +343,16 @@ public class MediationManager implements PersistedDataHost {
     else log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
   }
 
-  public void sendOpenNewMediationMessage(
-      Mediation mediation, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
+/*
+ * Add functions to deal with requesting Mediation
+ */
+  public void sendGetMediatorMessage(Mediation mediation, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
+  }
+
+  private void handleMediationAccept(Mediation mediation, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
+  }
+
+  public void sendOpenNewMediationMessage(Mediation mediation, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
     if (!mediations.contains(mediation)) {
       final Optional<Mediation> storedMediationOptional =
           findMediation(mediation.getTradeId(), mediation.getTraderId());
@@ -353,6 +362,13 @@ public class MediationManager implements PersistedDataHost {
                 ? Res.get("support.youOpenedTicket")
                 : Res.get("support.youOpenedMediation", mediationInfo);
 
+		// Check to see if there is a mediator yet or not.
+		if (mediation.noMediatorSelected) {
+			// We don't have a mediator yet so send get mediation message
+			sendGetMediatorMessage(mediation);
+		} else {
+			// A mediator as responded. Send that mediator a message letting them know they are the mediator for this trade.
+			
         MediationCommunicationMessage mediationCommunicationMessage =
             new MediationCommunicationMessage(
                 mediation.getTradeId(),
@@ -367,9 +383,11 @@ public class MediationManager implements PersistedDataHost {
         }
 
         NodeAddress peersNodeAddress = mediation.getContract().getMediatorNodeAddress();
+log.info("**** Create New Mediation Message ****");
         OpenNewMediationMessage openNewMediationMessage =
             new OpenNewMediationMessage(
                 mediation, p2PService.getAddress(), UUID.randomUUID().toString());
+
         log.info(
             "Send {} to peer {}. tradeId={}, openNewMediationMessage.uid={}, "
                 + "mediationCommunicationMessage.uid={}",
@@ -378,6 +396,13 @@ public class MediationManager implements PersistedDataHost {
             openNewMediationMessage.getTradeId(),
             openNewMediationMessage.getUid(),
             mediationCommunicationMessage.getUid());
+
+log.info("**** Call P2P Service for Mediation Message ****");
+        log.info(
+            "Data -  {}",
+            mediation.getMediatorPubKeyRing()
+            );
+
         p2PService.sendEncryptedMailboxMessage(
             peersNodeAddress,
             mediation.getMediatorPubKeyRing(),
@@ -460,7 +485,8 @@ public class MediationManager implements PersistedDataHost {
   }
 
   // mediator sends that to trading peer when he received openMediation request
-  private String sendPeerOpenedMediationMessage(Mediation mediationFromOpener, Contract contractFromOpener, PubKeyRing pubKeyRing) {
+  private String sendPeerOpenedMediationMessage(
+      Mediation mediationFromOpener, Contract contractFromOpener, PubKeyRing pubKeyRing) {
     Mediation mediation =
         new Mediation(
             mediationStorage,
