@@ -17,14 +17,20 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AltCoinAccountDisclaimer;
+import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-import bisq.asset.RegexAddressValidator;
+import bisq.asset.NetworkParametersAdapter;
 
-@AltCoinAccountDisclaimer("account.altcoin.popup.drgl.msg")
-public class Dragonglass extends Coin {
+public class Fujicoin extends Coin {
+    public Fujicoin() {
+        super("Fujicoin", "FJC", new Base58BitcoinAddressValidator(new FujicoinParams()));
+    }
+	   public static class FujicoinParams extends NetworkParametersAdapter {
 
-    public Dragonglass() {
-        super("Dragonglass", "DRGL", new RegexAddressValidator("^(dRGL)[1-9A-HJ-NP-Za-km-z]{94}$"));
+        public FujicoinParams() {
+            addressHeader = 36;
+            p2shHeader = 16;
+            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
+        }
     }
 }
