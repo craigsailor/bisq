@@ -346,10 +346,10 @@ public class MediationManager implements PersistedDataHost {
 /*
  * Add functions to deal with requesting Mediation
  */
-  public void sendGetMediatorMessage(Mediation mediation, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
+  public void sendGetMediatorMessage(Mediation mediation) {
   }
 
-  private void handleMediationAccept(Mediation mediation, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
+  private void handleMediationAccept(Mediation mediation) {
   }
 
   public void sendOpenNewMediationMessage(Mediation mediation, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
@@ -363,12 +363,23 @@ public class MediationManager implements PersistedDataHost {
                 : Res.get("support.youOpenedMediation", mediationInfo);
 
 		// Check to see if there is a mediator yet or not.
-		if (mediation.noMediatorSelected) {
-			// We don't have a mediator yet so send get mediation message
-			sendGetMediatorMessage(mediation);
-		} else {
-			// A mediator as responded. Send that mediator a message letting them know they are the mediator for this trade.
-			
+        if (mediation.getMediatorPubKeyRing() == null) {
+            // We don't have a mediator yet so send get mediation message
+            log.info("**** No mediator accepted yet. Sending request for Mediation.");
+// Get list of registerd mediators
+//          registeredMediatorList = new ArrayList<>(user.getAcceptedMediators());
+// Send a Mediation request to each mediator
+            sendGetMediatorMessage(mediation);
+
+            // Add status to Mediation that mediation requests have been sent
+            //mediation.setStatusAwaitingMediator();
+
+            return;
+        } else {
+            // A mediator as responded. Send that mediator a message letting them know they are the mediator for this trade.
+            log.info("**** We already have an open Mediation.");
+        }
+
         MediationCommunicationMessage mediationCommunicationMessage =
             new MediationCommunicationMessage(
                 mediation.getTradeId(),
