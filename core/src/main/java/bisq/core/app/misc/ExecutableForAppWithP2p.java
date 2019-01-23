@@ -134,18 +134,30 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
             Profiler.printSystemLoad(log);
             if (!stopped) {
                 long usedMemoryInMB = Profiler.getUsedMemoryInMB();
-                if (usedMemoryInMB > (maxMemory * 0.8)) {
+                double warningTrigger = maxMemory * 0.8;
+                if (usedMemoryInMB > warningTrigger) {
                     log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                                    "We are over our memory warn limit and call the GC. usedMemoryInMB: {}" +
+                                    "We are over 80% of our memory limit ({}) and call the GC. usedMemory: {} MB. freeMemory: {} MB" +
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
-                            usedMemoryInMB);
+                            (int) warningTrigger, usedMemoryInMB, Profiler.getFreeMemoryInMB());
                     System.gc();
                     Profiler.printSystemLoad(log);
                 }
 
                 UserThread.runAfter(() -> {
-                    if (Profiler.getUsedMemoryInMB() > maxMemory)
+                    log.warn("Memory 2 sec. after calling the GC. usedMemory: {} MB. freeMemory: {} MB",
+                            Profiler.getUsedMemoryInMB(), Profiler.getFreeMemoryInMB());
+                }, 2);
+
+                UserThread.runAfter(() -> {
+                    long usedMemory = Profiler.getUsedMemoryInMB();
+                    if (usedMemory > maxMemory) {
+                        log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                                        "We are over our memory limit ({}) and trigger a restart. usedMemory: {} MB. freeMemory: {} MB" +
+                                        "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
+                                (int) maxMemory, usedMemory, Profiler.getFreeMemoryInMB());
                         restart(environment, gracefulShutDownHandler);
+                    }
                 }, 5);
             }
         }, CHECK_MEMORY_PERIOD_SEC);
