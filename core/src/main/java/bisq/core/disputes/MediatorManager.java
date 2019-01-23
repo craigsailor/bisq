@@ -186,6 +186,14 @@ public class MediatorManager {
         updateMediatorMap();
     }
 
+	// Provide list of Mediators
+	public List getRegisteredMediators() {
+        //persistedAcceptedMediators = new ArrayList<>(user.getAcceptedMediators());
+		//return persistedAcceptedMediators;
+List<NodeAddress> acceptedMediators = user.getAcceptedMediatorAddresses();
+		return acceptedMediators;
+	}
+
     private void startRepublishMediator() {
         if (republishMediatorTimer == null) {
             republishMediatorTimer = UserThread.runPeriodically(this::republishMediator, REPUBLISH_MILLIS, TimeUnit.MILLISECONDS);

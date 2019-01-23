@@ -55,6 +55,7 @@ public abstract class TradeSubView extends HBox {
     protected TradeStepView tradeStepView;
     private AutoTooltipButton openMediationButton;
     private AutoTooltipButton traderCommButton;
+    private AutoTooltipButton openDisputeButton;
     private NotificationGroup notificationGroup;
     private NotificationGroup mediationNotificationGroup;
     private NotificationGroup traderCommNotificationGroup;
@@ -83,6 +84,9 @@ public abstract class TradeSubView extends HBox {
 
         if (tradeStepView != null)
             tradeStepView.deactivate();
+
+        if (openDisputeButton != null)
+            leftGridPane.getChildren().remove(openDisputeButton);
 
         if (openMediationButton != null)
             leftGridPane.getChildren().remove(openMediationButton);
@@ -116,6 +120,20 @@ public abstract class TradeSubView extends HBox {
         tradeProcessTitledGroupBg.getStyleClass().add("last");
 
         addWizards();
+
+		// Add Arbitration Button and info frame
+		TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", 0);
+        noticeTitledGroupBg.getStyleClass().add("last");
+        Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "",
+                Layout.FIRST_ROW_DISTANCE);
+
+		openDisputeButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openDispute"));
+        GridPane.setColumnIndex(openDisputeButton, 0);
+        openDisputeButton.setId("open-dispute-button");
+
+        notificationGroup = new NotificationGroup(noticeTitledGroupBg, label, openDisputeButton);
+        notificationGroup.setLabelAndHeadlineVisible(false);
+        notificationGroup.setButtonVisible(false);
 
 		// Add Trader to Trader Comm Button
         traderCommButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.traderCommButton"));

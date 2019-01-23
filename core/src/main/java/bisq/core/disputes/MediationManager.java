@@ -31,6 +31,7 @@ import bisq.common.util.Tuple2;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.disputes.MediatorManager;
 import bisq.core.disputes.messages.MediationCommunicationMessage;
 import bisq.core.disputes.messages.MediationMessage;
 import bisq.core.disputes.messages.MediationResultMessage;
@@ -93,6 +94,8 @@ public class MediationManager implements PersistedDataHost {
   private final Map<String, Mediation> openMediations;
   private final Map<String, Mediation> closedMediations;
   private final Map<String, Timer> delayMsgMap = new HashMap<>();
+
+	private List<Mediator> registeredMediatorList;
 
   private final Map<String, Subscription> mediationIsClosedSubscriptionsMap = new HashMap<>();
   @Getter private final IntegerProperty numOpenMediations = new SimpleIntegerProperty();
@@ -362,12 +365,15 @@ public class MediationManager implements PersistedDataHost {
                 ? Res.get("support.youOpenedTicket")
                 : Res.get("support.youOpenedMediation", mediationInfo);
 
+/* TODO Figure this shit out. For now I'm going to use the arbitrator address instead
 		// Check to see if there is a mediator yet or not.
         if (mediation.getMediatorPubKeyRing() == null) {
             // We don't have a mediator yet so send get mediation message
             log.info("**** No mediator accepted yet. Sending request for Mediation.");
 // Get list of registerd mediators
-//          registeredMediatorList = new ArrayList<>(user.getAcceptedMediators());
+				//registeredMediatorList = new ArrayList<>(user.getAcceptedMediators());
+				registeredMediatorList = new List<>(MediatorManager.getRegisteredMediators());
+				List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
 // Send a Mediation request to each mediator
             sendGetMediatorMessage(mediation);
 
@@ -379,6 +385,7 @@ public class MediationManager implements PersistedDataHost {
             // A mediator as responded. Send that mediator a message letting them know they are the mediator for this trade.
             log.info("**** We already have an open Mediation.");
         }
+*/
 
         MediationCommunicationMessage mediationCommunicationMessage =
             new MediationCommunicationMessage(
