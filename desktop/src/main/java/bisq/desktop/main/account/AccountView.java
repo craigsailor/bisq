@@ -31,6 +31,7 @@ import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.content.notifications.MobileNotificationsView;
 import bisq.desktop.main.account.content.password.PasswordView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
+import bisq.desktop.main.account.mediatorregistration.MediatorRegistrationView;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
@@ -71,7 +72,9 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private final Navigation navigation;
     private Tab selectedTab;
     private Tab arbitratorRegistrationTab;
+    private Tab mediatorRegistrationTab;
     private ArbitratorRegistrationView arbitratorRegistrationView;
+    private MediatorRegistrationView mediatorRegistrationView;
     private Scene scene;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private ListChangeListener<Tab> tabListChangeListener;
@@ -94,9 +97,13 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         seedwordsTab.setText(Res.get("account.menu.seedWords").toUpperCase());
         backupTab.setText(Res.get("account.menu.backup").toUpperCase());
 
+        // Mediator view added here but not sure if this is 100% correct.
+        // No problem though since it will replace the Arbitrator eventually.
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
                 if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class))
+                    navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+                else if (mediatorRegistrationTab == null && viewPath.get(2).equals(MediatorRegistrationView.class))
                     navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
                 else
                     loadView(viewPath.tip());
@@ -106,19 +113,30 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         };
 
         keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) &&
+            if (Utilities.isAltOrCtrlPressed(KeyCode.Y, event) &&
                     arbitratorRegistrationTab == null) {
+                // TODO: This can be removed once we don't support arbitrators anymore
                 arbitratorRegistrationTab = new Tab(Res.get("account.tab.arbitratorRegistration").toUpperCase());
                 arbitratorRegistrationTab.setClosable(true);
                 root.getTabs().add(arbitratorRegistrationTab);
 
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
+            } else if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) &&
+                    mediatorRegistrationTab == null) {
+                // Keypress to open AddMediator
+                mediatorRegistrationTab = new Tab(Res.get("account.tab.mediatorRegistration").toUpperCase());
+                mediatorRegistrationTab.setClosable(true);
+                root.getTabs().add(mediatorRegistrationTab);
+
+                navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             }
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (arbitratorRegistrationTab != null && selectedTab != arbitratorRegistrationTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
+            } else if (newValue == mediatorRegistrationTab && selectedTab != mediatorRegistrationTab) {
+                navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             } else if (newValue == fiatAccountsTab && selectedTab != fiatAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
             } else if (newValue == altcoinAccountsTab && selectedTab != altcoinAccountsTab) {
@@ -140,10 +158,23 @@ public class AccountView extends ActivatableView<TabPane, Void> {
             if (removedTabs.size() == 1 && removedTabs.get(0).equals(arbitratorRegistrationTab))
                 onArbitratorRegistrationTabRemoved();
         };
+
+        tabListChangeListener = change -> {
+            change.next();
+            List<? extends Tab> removedTabs = change.getRemoved();
+            if (removedTabs.size() == 1 && removedTabs.get(0).equals(mediatorRegistrationTab))
+                onMediatorRegistrationTabRemoved();
+        };
     }
 
     private void onArbitratorRegistrationTabRemoved() {
         arbitratorRegistrationTab = null;
+
+        navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+    }
+
+    private void onMediatorRegistrationTabRemoved() {
+        mediatorRegistrationTab = null;
 
         navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
     }
@@ -163,6 +194,8 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == AccountView.class) {
             if (arbitratorRegistrationTab != null)
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
+            else if (mediatorRegistrationTab != null)
+                navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             else if (root.getSelectionModel().getSelectedItem() == fiatAccountsTab)
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
             else if (root.getSelectionModel().getSelectedItem() == altcoinAccountsTab)
@@ -209,6 +242,12 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 selectedTab = arbitratorRegistrationTab;
                 arbitratorRegistrationView = (ArbitratorRegistrationView) view;
                 arbitratorRegistrationView.onTabSelection(true);
+            }
+        } else if (view instanceof MediatorRegistrationView) {
+            if (mediatorRegistrationTab != null) {
+                selectedTab = mediatorRegistrationTab;
+                mediatorRegistrationView = (MediatorRegistrationView) view;
+                mediatorRegistrationView.onTabSelection(true);
             }
         } else if (view instanceof FiatAccountsView) {
             selectedTab = fiatAccountsTab;

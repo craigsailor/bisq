@@ -19,7 +19,7 @@ package bisq.core.trade;
 
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.Mediator;
+import bisq.core.disputes.Mediator;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;

@@ -1523,6 +1523,20 @@ textfield */
     -fx-background-color: -bs-rd-error-red;
 }
 
+#open-mediation-button {
+    -fx-font-weight: bold;
+    -fx-text-fill: -bs-rd-black;
+    -fx-font-size: 1.077em;
+    -fx-background-color: -bs-rd-green-dark;
+}
+
+#open-tradercomm-button {
+    -fx-font-weight: bold;
+    -fx-text-fill: -bs-rd-black;
+    -fx-font-size: 1.077em;
+    -fx-background-color: -bs-rd-green-dark;
+}
+
 /* TitledGroupBg */
 
 .titled-group-bg-label, .titled-group-bg-label-active {

@@ -57,7 +57,8 @@ public final class AddressEntry implements PersistablePayload {
         OFFER_FUNDING,
         RESERVED_FOR_TRADE,
         MULTI_SIG,
-        TRADE_PAYOUT
+        TRADE_PAYOUT,
+        MEDIATOR // Will not be needed
     }
 
     // keyPair can be null in case the object is created from deserialization as it is transient.

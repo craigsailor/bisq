@@ -580,6 +580,14 @@ public class BtcWalletService extends WalletService {
         return getOrCreateAddressEntry(context, addressEntry);
     }
 
+    public AddressEntry getMediatorAddressEntry() {
+        AddressEntry.Context context = AddressEntry.Context.MEDIATOR;
+        Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
+                .filter(e -> context == e.getContext())
+                .findAny();
+        return getOrCreateAddressEntry(context, addressEntry);
+    }
+
     public AddressEntry getFreshAddressEntry() {
         AddressEntry.Context context = AddressEntry.Context.AVAILABLE;
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
